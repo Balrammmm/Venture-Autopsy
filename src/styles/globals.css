@@ -1,0 +1,378 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  /* ================================================================== *
+   * DARK — 'Midnight Venture Atelier'
+   * Deep petrol and navy rather than flat black, lit by warm porcelain.
+   * Colour carries meaning: chartreuse is action, mineral blue is research,
+   * verdant green is validated signal, ember is risk, slate-violet is the
+   * unknown. Nothing is coloured for decoration.
+   * ================================================================== */
+  :root,
+  [data-theme='dark'] {
+    color-scheme: dark;
+
+    --ink-950: 5 9 13;
+    --ink-900: 8 14 19;
+    --ink-800: 11 19 25;
+    --ink-700: 16 26 34;
+    --ink-600: 22 35 45;
+    --ink-500: 30 46 58;
+    --ink-400: 41 60 75;
+    --ink-300: 58 80 98;
+
+    --paper: 242 237 228;
+    --paper-dim: 199 202 203;
+    --paper-faint: 143 155 163;
+    --paper-sub: 129 142 151;
+
+    /* Semantic accents */
+    --action: 200 232 90;
+    --action-deep: 158 190 52;
+    --action-ink: 8 14 19;
+    /* Accent used as foreground. On petrol the fill colour already reads;
+       on parchment it must darken to stay legible. */
+    --action-text: 200 232 90;
+    --signal: 126 206 150;
+    --signal-deep: 76 158 104;
+    --intel: 116 168 214;
+    --intel-deep: 70 122 172;
+    --risk: 232 98 44;
+    --risk-deep: 190 68 22;
+    --unknown: 150 146 190;
+
+    --rule: rgba(242, 237, 228, 0.10);
+    --rule-strong: rgba(242, 237, 228, 0.19);
+
+    --glow-a: rgba(116, 168, 214, 0.09);
+    --glow-b: rgba(200, 232, 90, 0.055);
+    --scrim: 11 19 25;
+    --grain-opacity: 0.2;
+    --grain-blend: overlay;
+
+    --shadow-lift: 0 18px 44px -20px rgba(0, 0, 0, 0.85);
+    --shadow-press: 0 4px 12px -6px rgba(0, 0, 0, 0.9);
+  }
+
+  /* ================================================================== *
+   * LIGHT — 'Architect's Field Notebook'
+   * Warm parchment stock and deep ink. The accents are redrawn for paper:
+   * ultramarine for knowledge, verdigris for validation, terracotta for
+   * risk. Chartreuse survives only as the primary action fill.
+   * ================================================================== */
+  [data-theme='light'] {
+    color-scheme: light;
+
+    --ink-950: 253 250 243;
+    --ink-900: 248 243 233;
+    --ink-800: 242 235 221;
+    --ink-700: 235 226 209;
+    --ink-600: 226 215 195;
+    --ink-500: 212 199 175;
+    --ink-400: 193 178 151;
+    --ink-300: 166 149 121;
+
+    --paper: 22 32 43;
+    --paper-dim: 56 70 84;
+    --paper-faint: 82 93 104;
+    --paper-sub: 88 98 108;
+
+    --action: 201 227 86;
+    --action-deep: 160 186 48;
+    --action-ink: 22 32 43;
+    --action-text: 63 82 16;
+    --signal: 33 100 78;
+    --signal-deep: 22 74 57;
+    --intel: 29 63 168;
+    --intel-deep: 20 45 128;
+    --risk: 152 58 32;
+    --risk-deep: 124 44 22;
+    --unknown: 92 84 124;
+
+    --rule: rgba(22, 32, 43, 0.14);
+    --rule-strong: rgba(22, 32, 43, 0.26);
+
+    --glow-a: rgba(29, 63, 168, 0.07);
+    --glow-b: rgba(33, 100, 78, 0.06);
+    --scrim: 242 235 221;
+    --grain-opacity: 0.42;
+    --grain-blend: multiply;
+
+    --shadow-lift: 0 16px 36px -20px rgba(48, 38, 22, 0.45);
+    --shadow-press: 0 3px 10px -6px rgba(48, 38, 22, 0.5);
+  }
+
+  html {
+    -webkit-text-size-adjust: 100%;
+    scrollbar-color: rgb(var(--ink-300)) rgb(var(--ink-800));
+  }
+
+  body {
+    @apply bg-ink-800 font-sans text-paper antialiased;
+    font-synthesis-weight: none;
+    text-rendering: optimizeLegibility;
+    transition:
+      background-color 420ms var(--ease-out),
+      color 420ms var(--ease-out);
+  }
+
+  :root {
+    --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+    --ease-inout: cubic-bezier(0.77, 0, 0.175, 1);
+    --ease-drawer: cubic-bezier(0.32, 0.72, 0, 1);
+  }
+
+  /* Browser surfaces belong to the design, not the browser. */
+  ::selection {
+    background: rgb(var(--signal));
+    color: rgb(var(--ink-900));
+  }
+  ::-webkit-scrollbar {
+    width: 11px;
+    height: 11px;
+  }
+  ::-webkit-scrollbar-track {
+    background: rgb(var(--ink-800));
+  }
+  ::-webkit-scrollbar-thumb {
+    background: rgb(var(--ink-400));
+    border: 3px solid rgb(var(--ink-800));
+    border-radius: 99px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: rgb(var(--ink-300));
+  }
+
+  input,
+  textarea,
+  select {
+    caret-color: rgb(var(--signal));
+  }
+  input::placeholder,
+  textarea::placeholder {
+    color: rgb(var(--paper-faint));
+  }
+
+  :focus-visible {
+    outline: 2px solid rgb(var(--signal));
+    outline-offset: 3px;
+    border-radius: 2px;
+  }
+  :focus:not(:focus-visible) {
+    outline: none;
+  }
+
+  a {
+    text-underline-offset: 0.22em;
+    text-decoration-thickness: 1px;
+  }
+
+  .num {
+    font-variant-numeric: tabular-nums;
+    font-feature-settings: 'tnum' 1;
+  }
+
+  [hidden] {
+    display: none !important;
+  }
+}
+
+@layer components {
+  .rule-t {
+    border-top: 1px solid var(--rule);
+  }
+  .rule-b {
+    border-bottom: 1px solid var(--rule);
+  }
+  .rule-l {
+    border-left: 1px solid var(--rule);
+  }
+
+  .grid-field {
+    background-image:
+      linear-gradient(to right, var(--rule) 1px, transparent 1px),
+      linear-gradient(to bottom, var(--rule) 1px, transparent 1px);
+    background-size: 72px 72px;
+  }
+
+  .display {
+    @apply font-display tracking-display;
+    font-weight: 400;
+  }
+
+  .label {
+    @apply font-mono text-[10.5px] uppercase tracking-[0.18em] text-paper-faint;
+  }
+
+  .skeleton {
+    position: relative;
+    overflow: hidden;
+    background: rgb(var(--paper) / 0.045);
+  }
+  .skeleton::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    transform: translateX(-100%);
+    background: linear-gradient(90deg, transparent, rgb(var(--paper) / 0.07), transparent);
+    animation: sweep 1.5s infinite;
+  }
+  @keyframes sweep {
+    100% {
+      transform: translateX(100%);
+    }
+  }
+
+  /* Paper grain. Multiplies on light stock, overlays on obsidian. */
+  .grain::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    opacity: var(--grain-opacity);
+    mix-blend-mode: var(--grain-blend);
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)' opacity='0.55'/%3E%3C/svg%3E");
+  }
+}
+
+/* WCAG 2.2 target size: 24px everywhere, 44px once a finger is involved. The
+   hit box grows; the mark inside it does not. */
+.tap {
+  min-height: 24px;
+  min-width: 24px;
+}
+
+@media (pointer: coarse) {
+  .tap {
+    min-height: 44px;
+    min-width: 44px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.08ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+@media print {
+  @page {
+    margin: 15mm;
+  }
+  html,
+  body {
+    background: #fff !important;
+    color: #14140f !important;
+  }
+  .no-print {
+    display: none !important;
+  }
+  .print-break {
+    break-before: page;
+  }
+  .print-plain {
+    background: #fff !important;
+    color: #14140f !important;
+    border-color: #cfcabb !important;
+  }
+  a {
+    color: #14140f !important;
+  }
+}
+
+/* ------------------------------------------------------------------ *
+ * Kinetic type. Driven by CSS so the words never depend on JavaScript to
+ * become visible: the on-load reveal runs from the stylesheet, and the
+ * scroll-triggered ones are fully legible before their class is added.
+ * ------------------------------------------------------------------ */
+
+@keyframes kt-rise {
+  from {
+    transform: translateY(86%) rotate(1.4deg);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0) rotate(0);
+    opacity: 1;
+  }
+}
+
+@keyframes kt-slide-l {
+  from {
+    transform: translate(-30%, 60%);
+  }
+}
+
+@keyframes kt-slide-r {
+  from {
+    transform: translate(30%, 60%);
+  }
+}
+
+@keyframes kt-scatter {
+  from {
+    transform: translate(var(--kt-x), var(--kt-y)) rotate(var(--kt-r));
+  }
+}
+
+@keyframes kt-stretch {
+  from {
+    transform: scaleX(2.2);
+  }
+}
+
+.kt-word {
+  display: inline-block;
+  animation: kt-rise 0.85s cubic-bezier(0.23, 1, 0.32, 1) backwards;
+}
+
+/* Scroll-triggered variants sit at their final state until played. */
+.kt-play > .kt-slide-l {
+  animation: kt-slide-l 0.8s cubic-bezier(0.23, 1, 0.32, 1) backwards;
+}
+.kt-play > .kt-slide-r {
+  animation: kt-slide-r 0.8s cubic-bezier(0.23, 1, 0.32, 1) backwards;
+}
+.kt-play .kt-char {
+  animation: kt-scatter 0.9s cubic-bezier(0.23, 1, 0.32, 1) backwards;
+}
+.kt-play .kt-stretch {
+  animation: kt-stretch 0.72s cubic-bezier(0.23, 1, 0.32, 1) backwards;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .kt-word,
+  .kt-play > .kt-slide-l,
+  .kt-play > .kt-slide-r,
+  .kt-play .kt-char,
+  .kt-play .kt-stretch {
+    animation: none !important;
+  }
+}
+
+/*
+ * Block-level reveal. No rotation: rotating a full-width container shifts its
+ * bounding box sideways and can breach the reserved rail gutter.
+ */
+@keyframes kt-block {
+  from {
+    transform: translateY(14px);
+  }
+}
+
+.kt-block {
+  animation: kt-block 0.7s cubic-bezier(0.23, 1, 0.32, 1) backwards;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .kt-block {
+    animation: none !important;
+  }
+}
