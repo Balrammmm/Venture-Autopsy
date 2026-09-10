@@ -2,6 +2,7 @@ import { z } from 'zod'
 import { db } from '@/lib/db'
 import { requireVenture } from '@/lib/auth'
 import { handle, ok, fail, parseData } from '@/lib/api'
+import { BURST, burst, readJson, spendModelCall } from '@/lib/limits'
 import { MILO_ACTIONS, askMilo, evidenceBlock, founderBlock } from '@/lib/gemini'
 
 export const maxDuration = 60
@@ -27,7 +28,11 @@ export async function POST(req: Request, ctx: { params: Promise<{ id: string }> 
   try {
     const { id } = await ctx.params
     const { user, venture } = await requireVenture(id)
-    const body = Body.parse(await req.json())
+    const body = Body.parse(await readJson(req))
+
+    // Milo calls the model on every turn.
+    burst(`milo:${user.id}`, BURST.model)
+    await spendModelCall(user.id)
 
     const preset = body.action ? MILO_ACTIONS[body.action as keyof typeof MILO_ACTIONS] : undefined
     const prompt = preset || body.prompt?.trim()

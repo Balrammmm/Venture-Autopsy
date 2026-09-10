@@ -16,7 +16,7 @@ const EASE = [0.23, 1, 0.32, 1] as const
 function MiloFox({ mood, size = 46 }: { mood: MiloMood; size?: number }) {
   const reduce = useReducedMotion()
   const [blink, setBlink] = useState(false)
-  const accent = mood === 'wary' ? '#FF5A1F' : '#C8FB2E'
+  const accent = mood === 'wary' ? 'rgb(var(--risk))' : 'rgb(var(--action-text))'
 
   useEffect(() => {
     if (reduce) return
@@ -89,7 +89,7 @@ function MiloFox({ mood, size = 46 }: { mood: MiloMood; size?: number }) {
         {/* Head plate */}
         <path
           d="M24 15.2c6.2 0 9.8 4.1 9.8 9.2 0 5.5-4.3 9-9.8 9s-9.8-3.5-9.8-9c0-5.1 3.6-9.2 9.8-9.2Z"
-          fill="#0C0E0B"
+          fill="rgb(var(--ink-800))"
           stroke={accent}
           strokeWidth="1.5"
         />
@@ -116,6 +116,8 @@ const ACTIONS: { id: string; label: string; when?: string[] }[] = [
   { id: 'pitch', label: 'Turn this into a one-page pitch' },
   { id: 'explain', label: 'Explain this visual' },
   { id: 'sevendays', label: 'Build my next seven days', when: ['launch', 'strategy'] },
+  { id: 'research', label: 'Summarise the research', when: ['research', 'market'] },
+  { id: 'launch', label: 'Build a launch plan', when: ['launch', 'strategy'] },
 ]
 
 interface Message {
@@ -143,6 +145,7 @@ export function Milo({
   const [messages, setMessages] = useState<Message[]>([])
   const [error, setError] = useState<ApiError | null>(null)
   const [loaded, setLoaded] = useState(false)
+  const [draft, setDraft] = useState('')
   const logRef = useRef<HTMLDivElement>(null)
   const triggerRef = useRef<HTMLButtonElement>(null)
   const closeRef = useRef<HTMLButtonElement>(null)
@@ -174,26 +177,45 @@ export function Milo({
     logRef.current?.scrollTo({ top: logRef.current.scrollHeight, behavior: reduce ? 'auto' : 'smooth' })
   }, [messages, busy, reduce])
 
-  async function run(actionId: string) {
+  /**
+   * One path for both a preset action and a typed question — the optimistic
+   * message differs only in what it says, and the body differs only in which
+   * field carries the ask.
+   */
+  async function send(input: { action: string } | { prompt: string }) {
     if (busy) return
+    const label = 'action' in input ? (ACTION_LABEL[input.action] ?? input.action) : input.prompt
+    if (!label.trim()) return
+
     setBusy(true)
     setError(null)
     const optimistic: Message = {
       id: `local-${Date.now()}`,
       role: 'founder',
-      content: ACTION_LABEL[actionId] ?? actionId,
+      content: label,
       createdAt: new Date().toISOString(),
     }
     setMessages((m) => [...m, optimistic])
     try {
-      const res = await post<{ message: Message }>(`/api/ventures/${ventureId}/milo`, { action: actionId, context })
+      const res = await post<{ message: Message }>(`/api/ventures/${ventureId}/milo`, { ...input, context })
       setMessages((m) => [...m, res.message])
     } catch (err) {
       setError(err as ApiError)
       setMessages((m) => m.filter((x) => x.id !== optimistic.id))
+      // Give the question back rather than losing what they typed.
+      if ('prompt' in input) setDraft(input.prompt)
     } finally {
       setBusy(false)
     }
+  }
+
+  const run = (actionId: string) => send({ action: actionId })
+
+  function submitDraft() {
+    const text = draft.trim()
+    if (!text || busy) return
+    setDraft('')
+    void send({ prompt: text })
   }
 
   async function clear() {
@@ -214,18 +236,18 @@ export function Milo({
         aria-expanded={open}
         aria-haspopup="dialog"
         aria-label={open ? 'Close the Founder Room' : 'Open the Founder Room with Milo'}
-        className="no-print fixed bottom-5 right-5 z-40 flex h-[60px] w-[60px] cursor-pointer items-center justify-center rounded-full border border-[rgba(243,238,226,0.16)] bg-ink-700/90 backdrop-blur-md transition-colors duration-200 ease-out hover:border-lime/50 md:bottom-7 md:right-7"
+        className="no-print fixed bottom-5 right-5 z-40 flex h-[60px] w-[60px] cursor-pointer items-center justify-center rounded-full border border-[rgb(var(--paper)/0.16)] bg-ink-700/90 backdrop-blur-md transition-colors duration-200 ease-out hover:border-action/50 md:bottom-7 md:right-7"
         animate={reduce ? {} : { y: [0, -5, 0] }}
         transition={{ duration: 5.4, repeat: Infinity, ease: 'easeInOut' }}
         whileTap={{ scale: 0.94 }}
-        style={{ boxShadow: '0 10px 30px -12px rgba(0,0,0,0.9)' }}
+        style={{ boxShadow: 'var(--shadow-lift)' }}
       >
         <MiloFox mood={effectiveMood} />
         {effectiveMood === 'wary' && !open && (
           <span
             aria-hidden="true"
-            className="absolute right-1 top-1 h-2 w-2 rounded-full bg-ember"
-            style={{ boxShadow: '0 0 0 3px #111410' }}
+            className="absolute right-1 top-1 h-2 w-2 rounded-full bg-risk"
+            style={{ boxShadow: '0 0 0 3px rgb(var(--ink-700))' }}
           />
         )}
       </motion.button>
@@ -239,8 +261,8 @@ export function Milo({
             animate={reduce ? { opacity: 1 } : { opacity: 1, y: 0, scale: 1 }}
             exit={reduce ? { opacity: 0 } : { opacity: 0, y: 10, scale: 0.98 }}
             transition={{ duration: 0.24, ease: EASE }}
-            style={{ transformOrigin: 'bottom right', boxShadow: '0 26px 64px -20px rgba(0,0,0,0.92)' }}
-            className="no-print fixed bottom-[88px] right-3 z-40 flex max-h-[min(660px,78vh)] w-[calc(100vw-1.5rem)] flex-col overflow-hidden rounded-[4px] border border-[rgba(243,238,226,0.14)] bg-ink-700/96 backdrop-blur-xl sm:right-5 sm:w-[410px] md:bottom-[104px] md:right-7"
+            style={{ transformOrigin: 'bottom right', boxShadow: 'var(--shadow-lift)' }}
+            className="no-print fixed bottom-[88px] right-3 z-40 flex max-h-[min(660px,78vh)] w-[calc(100vw-1.5rem)] flex-col overflow-hidden rounded-[4px] border border-[rgb(var(--paper)/0.14)] bg-ink-700/96 backdrop-blur-xl sm:right-5 sm:w-[410px] md:bottom-[104px] md:right-7"
           >
             <header className="flex shrink-0 items-center justify-between gap-3 border-b border-[color:var(--rule)] px-4 py-3">
               <div className="flex items-center gap-2.5">
@@ -284,11 +306,11 @@ export function Milo({
                     className={m.role === 'founder' ? 'flex justify-end' : ''}
                   >
                     {m.role === 'founder' ? (
-                      <p className="max-w-[82%] rounded-[3px] border border-lime/40 bg-lime-wash px-3 py-2 text-[13px] leading-[1.5] text-lime">
+                      <p className="max-w-[82%] rounded-[3px] border border-action/40 bg-action-wash px-3 py-2 text-[13px] leading-[1.5] text-action-text">
                         {m.content}
                       </p>
                     ) : (
-                      <div className="max-w-[94%] whitespace-pre-wrap rounded-[3px] border border-[rgba(243,238,226,0.12)] bg-[rgba(243,238,226,0.03)] px-3.5 py-3 text-[13.5px] leading-[1.62] text-paper-dim">
+                      <div className="max-w-[94%] whitespace-pre-wrap rounded-[3px] border border-[rgb(var(--paper)/0.12)] bg-[rgb(var(--paper)/0.03)] px-3.5 py-3 text-[13.5px] leading-[1.62] text-paper-dim">
                         {m.content}
                       </div>
                     )}
@@ -303,7 +325,7 @@ export function Milo({
                 )}
 
                 {error && (
-                  <div role="alert" className="border-l-2 border-ember bg-ember-wash px-3 py-2.5 text-[13px] leading-relaxed text-paper-dim">
+                  <div role="alert" className="border-l-2 border-risk bg-risk-wash px-3 py-2.5 text-[13px] leading-relaxed text-paper-dim">
                     {error.message}
                     {error.hint && <span className="mt-1 block text-paper-faint">{error.hint}</span>}
                   </div>
@@ -312,6 +334,45 @@ export function Milo({
             </div>
 
             <footer className="shrink-0 border-t border-[color:var(--rule)] px-4 py-3.5">
+              {/*
+                Ask anything. Enter sends, Shift+Enter breaks the line — the
+                convention people already have in their fingers.
+              */}
+              <form
+                className="mb-3.5 flex items-end gap-2"
+                onSubmit={(e) => {
+                  e.preventDefault()
+                  submitDraft()
+                }}
+              >
+                <label htmlFor="milo-ask" className="sr-only">
+                  Ask Milo about this venture
+                </label>
+                <textarea
+                  id="milo-ask"
+                  rows={1}
+                  value={draft}
+                  disabled={busy}
+                  onChange={(e) => {
+                    setDraft(e.target.value)
+                    e.target.style.height = 'auto'
+                    e.target.style.height = `${Math.min(112, e.target.scrollHeight)}px`
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' && !e.shiftKey) {
+                      e.preventDefault()
+                      submitDraft()
+                    }
+                  }}
+                  placeholder="Ask Milo anything about this venture…"
+                  maxLength={2000}
+                  className="max-h-28 min-h-[42px] flex-1 resize-none rounded-[3px] border border-[rgb(var(--paper)/0.16)] bg-[rgb(var(--paper)/0.03)] px-3 py-2.5 text-[13.5px] leading-[1.5] text-paper transition-colors duration-150 placeholder:text-paper-faint hover:border-[rgb(var(--paper)/0.28)] focus:border-action/60 focus:outline-none disabled:opacity-50"
+                />
+                <Button type="submit" size="sm" disabled={busy || !draft.trim()} aria-label="Send to Milo">
+                  {busy ? <Spinner /> : 'Ask'}
+                </Button>
+              </form>
+
               {suggested.length > 0 && (
                 <>
                   <p className="label mb-2">For what you are looking at</p>

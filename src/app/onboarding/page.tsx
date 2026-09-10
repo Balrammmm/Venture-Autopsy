@@ -5,7 +5,8 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { motion, useReducedMotion } from 'framer-motion'
 import { Button, Chip, ErrorNote, Field, IconArrow, IconBack, IconCheck, Input, Spinner, Textarea } from '@/components/ui/kit'
-import { HeroScene } from '@/components/landing/StaticStage'
+import { SeedStage } from '@/components/onboarding/SeedStage'
+import { BrandMark } from '@/components/brand/BrandMark'
 import { EXAMPLE_IDEAS } from '@/lib/demo-atlas'
 import { ApiError, post } from '@/lib/client'
 
@@ -36,6 +37,8 @@ function OnboardingInner() {
   const [error, setError] = useState<ApiError | null>(null)
   const [fieldError, setFieldError] = useState<string | null>(null)
   const ideaRef = useRef<HTMLTextAreaElement>(null)
+  // Feeds the 3D core: every keystroke adds a little light, which decays.
+  const charge = useRef(0)
 
   // The demo link fills a working founder profile so the lab can be explored at once.
   useEffect(() => {
@@ -114,9 +117,7 @@ function OnboardingInner() {
       <div className="grid-field pointer-events-none absolute inset-0 opacity-30" aria-hidden="true" />
 
       <header className="relative z-10 mx-auto flex max-w-[1400px] items-center justify-between px-5 py-5 md:px-10">
-        <Link href="/" className="display text-[18px] tracking-tightest text-paper">
-          Venture Autopsy
-        </Link>
+        <BrandMark href="/" compact />
         <Link href="/" className="tap inline-flex items-center gap-1.5 text-[13px] text-paper-faint hover:text-paper">
           <IconBack size={14} />
           Back
@@ -131,7 +132,7 @@ function OnboardingInner() {
               <li key={s} className="flex items-center gap-3">
                 <span
                   className={`flex items-center gap-2 font-mono text-[10.5px] uppercase tracking-[0.16em] ${
-                    i === step ? 'text-lime' : i < step ? 'text-paper-dim' : 'text-paper-sub'
+                    i === step ? 'text-action-text' : i < step ? 'text-paper-dim' : 'text-paper-sub'
                   }`}
                   aria-current={i === step ? 'step' : undefined}
                 >
@@ -139,17 +140,17 @@ function OnboardingInner() {
                     aria-hidden="true"
                     className={`flex h-4 w-4 items-center justify-center rounded-full border text-[9px] ${
                       i === step
-                        ? 'border-lime text-lime'
+                        ? 'border-action text-action-text'
                         : i < step
                           ? 'border-paper-dim text-paper-dim'
-                          : 'border-[rgba(243,238,226,0.24)]'
+                          : 'border-[rgb(var(--paper)/0.24)]'
                     }`}
                   >
                     {i < step ? <IconCheck size={9} /> : i + 1}
                   </span>
                   {s}
                 </span>
-                {i < STEPS.length - 1 && <span aria-hidden="true" className="h-px w-6 bg-[rgba(243,238,226,0.2)]" />}
+                {i < STEPS.length - 1 && <span aria-hidden="true" className="h-px w-6 bg-[rgb(var(--paper)/0.2)]" />}
               </li>
             ))}
           </ol>
@@ -273,7 +274,12 @@ function OnboardingInner() {
                     ref={ideaRef}
                     rows={7}
                     value={idea}
-                    onChange={(e) => setIdea(e.target.value)}
+                    onChange={(e) => {
+                      setIdea(e.target.value)
+                      // Each keystroke feeds the core. It decays on its own,
+                      // so writing makes the specimen visibly brighten.
+                      charge.current = Math.min(1.4, charge.current + 0.16)
+                    }}
                     placeholder="A tool for small landlords who self-manage. The tenant reports a repair by text, we dispatch a vetted tradesperson, and every job becomes a compliance record…"
                     aria-describedby="idea-count"
                     className="min-h-[180px]"
@@ -281,7 +287,7 @@ function OnboardingInner() {
                   <p id="idea-count" className="mt-2 text-[12.5px] text-paper-faint" aria-live="polite">
                     <span className="num font-mono text-paper-sub">{idea.trim().length}</span> characters
                     {idea.trim().length > 0 && idea.trim().length < 40 && (
-                      <span className="text-ember"> · at least 40 needed</span>
+                      <span className="text-risk"> · at least 40 needed</span>
                     )}
                   </p>
 
@@ -298,7 +304,7 @@ function OnboardingInner() {
             )}
           </motion.div>
 
-          {fieldError && <p className="mt-5 text-[13px] text-ember" role="alert">{fieldError}</p>}
+          {fieldError && <p className="mt-5 text-[13px] text-risk" role="alert">{fieldError}</p>}
           {error && (
             <ErrorNote className="mt-5" message={error.message} hint={error.hint} onRetry={step === 2 ? finish : undefined} />
           )}
@@ -332,8 +338,11 @@ function OnboardingInner() {
 
         <aside className="hidden lg:block">
           <div className="sticky top-16">
-            <div className="w-full"><HeroScene /></div>
-            <p className="mt-4 max-w-[36ch] text-[12.5px] leading-relaxed text-paper-faint">
+            <SeedStage step={step} charge={charge} />
+            <p aria-hidden="true" className="mt-4 font-mono text-[10px] uppercase tracking-[0.22em] text-paper-faint">
+              {step === 0 ? 'Specimen · dormant' : step === 1 ? 'Specimen · waking' : 'Specimen · open'}
+            </p>
+            <p className="mt-3 max-w-[36ch] text-[12.5px] leading-relaxed text-paper-faint">
               Nothing here is researched unless you say so. Everything the analysis produces from your description
               alone is labelled a hypothesis — written to be tested, not believed.
             </p>

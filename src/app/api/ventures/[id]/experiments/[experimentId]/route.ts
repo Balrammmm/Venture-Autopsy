@@ -2,6 +2,7 @@ import { z } from 'zod'
 import { db } from '@/lib/db'
 import { requireVenture } from '@/lib/auth'
 import { handle, ok, parseData } from '@/lib/api'
+import { readJson } from '@/lib/limits'
 
 const Patch = z.object({
   name: z.string().min(2).max(160).optional(),
@@ -24,7 +25,7 @@ export async function PATCH(req: Request, ctx: { params: Promise<{ id: string; e
   try {
     const { id, experimentId } = await ctx.params
     await requireVenture(id)
-    const body = Patch.parse(await req.json())
+    const body = Patch.parse(await readJson(req))
 
     const existing = await db.experiment.findFirst({ where: { id: experimentId, ventureId: id } })
     if (!existing) {

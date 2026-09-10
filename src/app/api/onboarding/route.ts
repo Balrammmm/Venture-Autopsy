@@ -2,6 +2,7 @@ import { z } from 'zod'
 import { db } from '@/lib/db'
 import { requireUser } from '@/lib/auth'
 import { handle, ok } from '@/lib/api'
+import { readJson } from '@/lib/limits'
 
 const Body = z.object({
   role: z.string().max(120).optional(),
@@ -14,7 +15,7 @@ const Body = z.object({
 export async function POST(req: Request) {
   try {
     const user = await requireUser()
-    const body = Body.parse(await req.json())
+    const body = Body.parse(await readJson(req))
     const updated = await db.user.update({
       where: { id: user.id },
       data: {

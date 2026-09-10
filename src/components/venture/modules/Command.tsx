@@ -64,7 +64,7 @@ export function IdeaGenome({ genome }: { genome: Genome }) {
                 y1={from.y}
                 x2={to.x}
                 y2={to.y}
-                stroke={lit ? '#C8FB2E' : 'rgba(243,238,226,0.22)'}
+                stroke={lit ? 'rgb(var(--action-text))' : 'rgb(var(--paper)/0.22)'}
                 strokeWidth={lit ? 1.5 : 1}
                 strokeDasharray={lit ? undefined : '3 5'}
               >
@@ -73,14 +73,14 @@ export function IdeaGenome({ genome }: { genome: Genome }) {
             )
           })}
 
-          <circle cx="160" cy="160" r="26" fill="#C8FB2E" fillOpacity="0.1" stroke="#C8FB2E" strokeOpacity="0.4" />
+          <circle cx="160" cy="160" r="26" fill="rgb(var(--action-text))" fillOpacity="0.1" stroke="rgb(var(--action-text))" strokeOpacity="0.4" />
           <text
             x="160"
             y="164"
             textAnchor="middle"
             fontSize="9"
             fontFamily="var(--font-mono), monospace"
-            fill="#8E8A7E"
+            fill="rgb(var(--paper-sub))"
             letterSpacing="1.4"
           >
             IDEA
@@ -91,15 +91,15 @@ export function IdeaGenome({ genome }: { genome: Genome }) {
             const weak = n.strength <= 2
             return (
               <g key={n.id} className="cursor-pointer" onClick={() => setActive(n.id)}>
-                <circle cx={n.x} cy={n.y} r={on ? 19 : 15} fill="#0C0E0B" stroke={weak ? '#FF5A1F' : '#C8FB2E'} strokeWidth={on ? 2 : 1.2} />
-                <circle cx={n.x} cy={n.y} r={on ? 7 : 5} fill={weak ? '#FF5A1F' : '#C8FB2E'} fillOpacity={on ? 1 : 0.65} />
+                <circle cx={n.x} cy={n.y} r={on ? 19 : 15} fill="rgb(var(--ink-800))" stroke={weak ? 'rgb(var(--risk))' : 'rgb(var(--action-text))'} strokeWidth={on ? 2 : 1.2} />
+                <circle cx={n.x} cy={n.y} r={on ? 7 : 5} fill={weak ? 'rgb(var(--risk))' : 'rgb(var(--action-text))'} fillOpacity={on ? 1 : 0.65} />
                 <text
                   x={n.x}
                   y={n.y + 32}
                   textAnchor="middle"
                   fontSize="8.5"
                   fontFamily="var(--font-mono), monospace"
-                  fill={on ? '#F3EEE2' : '#8E8A7E'}
+                  fill={on ? 'rgb(var(--paper))' : 'rgb(var(--paper-sub))'}
                   letterSpacing="1.2"
                 >
                   {KIND_LABEL[n.kind]?.toUpperCase()}
@@ -111,7 +111,7 @@ export function IdeaGenome({ genome }: { genome: Genome }) {
 
         <p className="mt-3 max-w-[38ch] text-[12.5px] leading-relaxed text-paper-faint">
           Parts sit further out the less you have established them. An{' '}
-          <span className="text-ember">orange</span> node is one the analysis could not find much behind.
+          <span className="text-risk">orange</span> node is one the analysis could not find much behind.
         </p>
       </div>
 
@@ -134,7 +134,7 @@ export function IdeaGenome({ genome }: { genome: Genome }) {
               className="rule-t mt-6 pt-5"
             >
               <div className="flex flex-wrap items-center gap-3">
-                <p className="font-mono text-[10.5px] uppercase tracking-[0.18em] text-lime">
+                <p className="font-mono text-[10.5px] uppercase tracking-[0.18em] text-action-text">
                   {KIND_LABEL[activeNode.kind]}
                 </p>
                 <ScoreBar
@@ -151,7 +151,7 @@ export function IdeaGenome({ genome }: { genome: Genome }) {
                   <ul className="space-y-1.5">
                     {activeNode.unknowns.map((u, i) => (
                       <li key={i} className="flex gap-2.5 text-[13.5px] leading-[1.55] text-paper-faint">
-                        <span aria-hidden="true" className="mt-[7px] h-1 w-1 shrink-0 rounded-full bg-ember" />
+                        <span aria-hidden="true" className="mt-[7px] h-1 w-1 shrink-0 rounded-full bg-risk" />
                         {u}
                       </li>
                     ))}
@@ -162,15 +162,15 @@ export function IdeaGenome({ genome }: { genome: Genome }) {
           </AnimatePresence>
         )}
 
-        <div className="mt-8 border-l-2 border-ember pl-5">
+        <div className="mt-8 border-l-2 border-risk pl-5">
           <p className="flex items-center gap-2 text-[14.5px] text-paper">
-            <IconAlert size={14} className="text-ember" />
+            <IconAlert size={14} className="text-risk" />
             What you did not say
           </p>
           <ul className="mt-3 space-y-2">
             {genome.missingInformation.map((m, i) => (
               <li key={i} className="flex max-w-measure gap-3 text-[13.5px] leading-[1.6] text-paper-dim">
-                <span aria-hidden="true" className="num mt-[2px] shrink-0 font-mono text-[10.5px] text-ember">
+                <span aria-hidden="true" className="num mt-[2px] shrink-0 font-mono text-[10.5px] text-risk">
                   {String(i + 1).padStart(2, '0')}
                 </span>
                 {m}
@@ -190,8 +190,8 @@ export function IdeaGenome({ genome }: { genome: Genome }) {
 const STATUS_TONE: Record<string, string> = {
   untested: 'text-paper-faint',
   testing: 'text-paper',
-  supported: 'text-lime',
-  refuted: 'text-ember',
+  supported: 'text-action-text',
+  refuted: 'text-risk',
 }
 
 const STATUSES = ['untested', 'testing', 'supported', 'refuted'] as const
@@ -244,8 +244,8 @@ export function AssumptionMinefield({
         >
           <defs>
             <radialGradient id="mine-danger" cx="82%" cy="18%" r="62%">
-              <stop offset="0%" stopColor="#FF5A1F" stopOpacity="0.16" />
-              <stop offset="100%" stopColor="#FF5A1F" stopOpacity="0" />
+              <stop offset="0%" stopColor="rgb(var(--risk))" stopOpacity="0.16" />
+              <stop offset="100%" stopColor="rgb(var(--risk))" stopOpacity="0" />
             </radialGradient>
           </defs>
 
@@ -258,10 +258,10 @@ export function AssumptionMinefield({
             </g>
           ))}
 
-          <text x="215" y="322" textAnchor="middle" fontSize="9" fontFamily="var(--font-mono), monospace" fill="#827E72" letterSpacing="1.6">
+          <text x="215" y="322" textAnchor="middle" fontSize="9" fontFamily="var(--font-mono), monospace" fill="rgb(var(--paper-faint))" letterSpacing="1.6">
             UNCERTAINTY
           </text>
-          <text x="12" y="155" textAnchor="middle" fontSize="9" fontFamily="var(--font-mono), monospace" fill="#827E72" letterSpacing="1.6" transform="rotate(-90 12 155)">
+          <text x="12" y="155" textAnchor="middle" fontSize="9" fontFamily="var(--font-mono), monospace" fill="rgb(var(--paper-faint))" letterSpacing="1.6" transform="rotate(-90 12 155)">
             IMPACT
           </text>
 
@@ -273,7 +273,7 @@ export function AssumptionMinefield({
             const r = 8 + a.impact * 2.6
             const danger = a.impact * a.uncertainty >= 16
             const settled = a.status === 'supported' || a.status === 'refuted'
-            const fill = a.status === 'supported' ? '#C8FB2E' : danger ? '#FF5A1F' : '#C8FB2E'
+            const fill = a.status === 'supported' ? 'rgb(var(--action-text))' : danger ? 'rgb(var(--risk))' : 'rgb(var(--action-text))'
 
             return (
               <g key={a.id} className="cursor-pointer" onClick={() => setActive(a.id)}>
@@ -301,11 +301,11 @@ export function AssumptionMinefield({
 
         <div className="mt-4 flex flex-wrap items-center gap-x-5 gap-y-2 text-[12px] text-paper-faint">
           <span className="flex items-center gap-2">
-            <span aria-hidden="true" className="h-2.5 w-2.5 rounded-full bg-ember opacity-60" />
+            <span aria-hidden="true" className="h-2.5 w-2.5 rounded-full bg-risk opacity-60" />
             High impact and unknown
           </span>
           <span className="flex items-center gap-2">
-            <span aria-hidden="true" className="h-2.5 w-2.5 rounded-full bg-lime opacity-60" />
+            <span aria-hidden="true" className="h-2.5 w-2.5 rounded-full bg-action opacity-60" />
             Lower risk or supported
           </span>
           <span>Node size carries impact.</span>
@@ -325,7 +325,7 @@ export function AssumptionMinefield({
         </div>
 
         {adding && (
-          <div className="mb-5 rounded-[3px] border border-[rgba(243,238,226,0.14)] p-4">
+          <div className="mb-5 rounded-[3px] border border-[rgb(var(--paper)/0.14)] p-4">
             <label htmlFor="new-assumption" className="label mb-1.5 block">
               State it as one falsifiable sentence
             </label>
@@ -468,7 +468,7 @@ export function AssumptionMinefield({
                     <dd className="text-[13.5px] leading-[1.6] text-paper-dim">{current.proofNeeded}</dd>
                   </div>
                   <div>
-                    <dt className="label mb-1 text-lime">Cheapest test</dt>
+                    <dt className="label mb-1 text-action-text">Cheapest test</dt>
                     <dd className="text-[13.5px] leading-[1.6] text-paper-dim">{current.cheapestTest}</dd>
                     <dd className="mt-1.5 flex gap-4 font-mono text-[11px] text-paper-faint">
                       {current.testCost && <span className="num">{current.testCost}</span>}
@@ -510,7 +510,7 @@ export function AssumptionMinefield({
  * ================================================================== */
 
 const LIKELIHOOD_TONE: Record<string, string> = {
-  high: 'text-ember',
+  high: 'text-risk',
   moderate: 'text-paper',
   low: 'text-paper-faint',
 }
@@ -529,7 +529,7 @@ export function FailureMuseum({ failures }: { failures: FailureExhibit[] }) {
             initial={reduce ? false : { opacity: 0, y: 14 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.4, ease: EASE, delay: i * 0.05 }}
-            className="relative overflow-hidden rounded-[2px] border border-[rgba(243,238,226,0.12)] bg-[rgba(243,238,226,0.02)]"
+            className="relative overflow-hidden rounded-[2px] border border-[rgb(var(--paper)/0.12)] bg-[rgb(var(--paper)/0.02)]"
           >
             {/* Exhibit plate */}
             <div className="flex items-start justify-between gap-4 border-b border-[color:var(--rule)] px-5 py-3">
@@ -564,7 +564,7 @@ export function FailureMuseum({ failures }: { failures: FailureExhibit[] }) {
                   <ul className="space-y-1.5">
                     {f.warningSignals.map((w, k) => (
                       <li key={k} className="flex gap-2.5 text-[13px] leading-[1.55] text-paper-dim">
-                        <span aria-hidden="true" className="mt-[7px] h-1 w-1 shrink-0 rounded-full bg-ember" />
+                        <span aria-hidden="true" className="mt-[7px] h-1 w-1 shrink-0 rounded-full bg-risk" />
                         {w}
                       </li>
                     ))}
@@ -649,15 +649,15 @@ export function PivotPrism({ pivots }: { pivots: Pivot[] }) {
           >
             {sorted.map((p, i) => {
               const on = i === face
-              const tone = p.kind === 'bolder' ? '#FF5A1F' : '#C8FB2E'
+              const tone = p.kind === 'bolder' ? 'rgb(var(--risk))' : 'rgb(var(--action-text))'
               return (
                 <div
                   key={p.id}
                   className="absolute inset-x-[12%] inset-y-[16%] rounded-[2px] border"
                   style={{
                     transform: `rotateY(${i * 120}deg) translateZ(118px)`,
-                    borderColor: on ? tone : 'rgba(243,238,226,0.2)',
-                    background: on ? 'rgba(243,238,226,0.05)' : 'rgba(243,238,226,0.02)',
+                    borderColor: on ? tone : 'rgb(var(--paper)/0.2)',
+                    background: on ? 'rgb(var(--paper)/0.05)' : 'rgb(var(--paper)/0.02)',
                     backfaceVisibility: 'hidden',
                     boxShadow: on ? `0 24px 60px -30px ${tone}` : undefined,
                   }}
@@ -665,7 +665,7 @@ export function PivotPrism({ pivots }: { pivots: Pivot[] }) {
                   <div className="flex h-full flex-col justify-between p-5">
                     <p
                       className="font-mono text-[10px] uppercase tracking-[0.2em]"
-                      style={{ color: on ? tone : '#827E72' }}
+                      style={{ color: on ? tone : 'rgb(var(--paper-faint))' }}
                     >
                       {p.kind}
                     </p>
@@ -733,7 +733,7 @@ export function PivotPrism({ pivots }: { pivots: Pivot[] }) {
                 <dd className="max-w-measure text-[13.5px] leading-[1.62] text-paper-dim">{current.whoItServes}</dd>
               </div>
               <div className="rule-t pt-4">
-                <dt className="label mb-1 text-ember">What it costs you</dt>
+                <dt className="label mb-1 text-risk">What it costs you</dt>
                 <dd className="max-w-measure text-[13.5px] leading-[1.62] text-paper-dim">{current.tradeoff}</dd>
               </div>
             </dl>

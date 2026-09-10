@@ -11,7 +11,7 @@ const EASE = [0.23, 1, 0.32, 1] as const
  * Business Model Blueprint — an animated flow of value and money.
  * ================================================================== */
 
-const FLOW_TONE: Record<string, string> = { value: '#F3EEE2', money: '#C8FB2E', data: '#8E8A7E' }
+const FLOW_TONE: Record<string, string> = { value: 'rgb(var(--paper))', money: 'rgb(var(--action-text))', data: 'rgb(var(--paper-sub))' }
 
 export function BusinessModelBlueprint({
   model,
@@ -64,7 +64,7 @@ export function BusinessModelBlueprint({
               const to = actors[f.to]
               if (!from || !to) return null
               const on = activeFlow === f.id
-              const tone = FLOW_TONE[f.kind] ?? '#F3EEE2'
+              const tone = FLOW_TONE[f.kind] ?? 'rgb(var(--paper))'
               // Bow each edge away from the centre so parallel flows stay distinct.
               const mx = (from.x + to.x) / 2
               const my = (from.y + to.y) / 2
@@ -107,8 +107,8 @@ export function BusinessModelBlueprint({
                   width="104"
                   height="30"
                   rx="2"
-                  fill="#0C0E0B"
-                  stroke="rgba(243,238,226,0.34)"
+                  fill="rgb(var(--ink-800))"
+                  stroke="rgb(var(--paper)/0.34)"
                   strokeWidth="1"
                 />
                 <text
@@ -117,7 +117,7 @@ export function BusinessModelBlueprint({
                   textAnchor="middle"
                   fontSize="9.5"
                   fontFamily="var(--font-mono), monospace"
-                  fill="#F3EEE2"
+                  fill="rgb(var(--paper))"
                   letterSpacing="0.8"
                 >
                   {a.name.length > 15 ? a.name.slice(0, 14) + '…' : a.name}
@@ -224,7 +224,7 @@ export function BusinessModelBlueprint({
                 <li key={r.id} className="rule-t grid grid-cols-1 gap-x-6 gap-y-3 py-5 md:grid-cols-[minmax(0,200px)_minmax(0,1fr)]">
                   <div>
                     <p className="text-[14.5px] text-paper">{r.name}</p>
-                    <p className="num mt-1 font-mono text-[12.5px] text-lime">{r.pricePoint}</p>
+                    <p className="num mt-1 font-mono text-[12.5px] text-action-text">{r.pricePoint}</p>
                     <p className="mt-1 font-mono text-[10px] uppercase tracking-[0.14em] text-paper-sub">{r.model}</p>
                     <EvidenceTag evidence={r.evidence} className="mt-2" />
                   </div>
@@ -238,7 +238,7 @@ export function BusinessModelBlueprint({
                       <dd className="text-[13.5px] leading-[1.58] text-paper-dim">{r.testMethod}</dd>
                     </div>
                     <div>
-                      <dt className="label mb-0.5 text-ember">Risk</dt>
+                      <dt className="label mb-0.5 text-risk">Risk</dt>
                       <dd className="text-[13.5px] leading-[1.58] text-paper-dim">{r.risk}</dd>
                     </div>
                   </dl>
@@ -268,7 +268,7 @@ export function BusinessModelBlueprint({
               <li key={i} className="rule-t py-3.5">
                 <p className="text-[14px] text-paper">{u.metric}</p>
                 <p className="mt-1 text-[13px] leading-[1.55] text-paper-dim">{u.hypothesis}</p>
-                <p className="mt-1 text-[12.5px] leading-[1.5] text-lime">{u.howToMeasure}</p>
+                <p className="mt-1 text-[12.5px] leading-[1.5] text-action-text">{u.howToMeasure}</p>
               </li>
             ))}
           </ul>
@@ -278,22 +278,22 @@ export function BusinessModelBlueprint({
       {/* MVP scope */}
       <div className="rule-t mt-12 grid grid-cols-1 gap-x-12 gap-y-8 pt-6 md:grid-cols-2">
         <div>
-          <p className="label mb-3 text-lime">Build this</p>
+          <p className="label mb-3 text-action-text">Build this</p>
           <ul className="space-y-2.5">
             {model.mvpScope.inScope.map((x, i) => (
               <li key={i} className="flex gap-2.5 text-[13.5px] leading-[1.58] text-paper-dim">
-                <IconCheck size={13} className="mt-[3px] shrink-0 text-lime" />
+                <IconCheck size={13} className="mt-[3px] shrink-0 text-action-text" />
                 {x}
               </li>
             ))}
           </ul>
         </div>
         <div>
-          <p className="label mb-3 text-ember">Not this, not yet</p>
+          <p className="label mb-3 text-risk">Not this, not yet</p>
           <ul className="space-y-2.5">
             {model.mvpScope.outOfScope.map((x, i) => (
               <li key={i} className="flex gap-2.5 text-[13.5px] leading-[1.58] text-paper-faint">
-                <span aria-hidden="true" className="mt-[9px] h-px w-2.5 shrink-0 bg-ember" />
+                <span aria-hidden="true" className="mt-[9px] h-px w-2.5 shrink-0 bg-risk" />
                 {x}
               </li>
             ))}
@@ -313,9 +313,9 @@ export function BusinessModelBlueprint({
  * ================================================================== */
 
 const PATH_TONE: Record<string, string> = {
-  conservative: '#8E8A7E',
-  expected: '#C8FB2E',
-  ambitious: '#FF5A1F',
+  conservative: 'rgb(var(--paper-sub))',
+  expected: 'rgb(var(--action-text))',
+  ambitious: 'rgb(var(--risk))',
 }
 
 export function FutureScope({ scenarios }: { scenarios: Scenarios }) {
@@ -332,7 +332,7 @@ export function FutureScope({ scenarios }: { scenarios: Scenarios }) {
 
   return (
     <div>
-      <p className="mb-6 max-w-measure border-l-2 border-[rgba(243,238,226,0.24)] pl-4 text-[13px] leading-[1.62] text-paper-faint">
+      <p className="mb-6 max-w-measure border-l-2 border-[rgb(var(--paper)/0.24)] pl-4 text-[13px] leading-[1.62] text-paper-faint">
         {scenarios.disclaimer}
       </p>
 
@@ -342,7 +342,7 @@ export function FutureScope({ scenarios }: { scenarios: Scenarios }) {
             {[0, 1, 2, 3, 4].map((i) => (
               <line key={i} x1="40" y1={60 + i * 48} x2="470" y2={60 + i * 48} stroke="var(--rule)" />
             ))}
-            <line x1="40" y1="250" x2="470" y2="250" stroke="rgba(243,238,226,0.24)" />
+            <line x1="40" y1="250" x2="470" y2="250" stroke="rgb(var(--paper)/0.24)" />
 
             {scenarios.paths.map((p) => {
               const on = p.kind === active
@@ -374,14 +374,14 @@ export function FutureScope({ scenarios }: { scenarios: Scenarios }) {
                   animate={{ opacity: 1, scale: 1 }}
                   transition={{ duration: 0.4, ease: EASE, delay: i * 0.08 }}
                 >
-                  <circle cx={x} cy={y} r="5.5" fill="#0C0E0B" stroke={PATH_TONE[path.kind]} strokeWidth="2" />
+                  <circle cx={x} cy={y} r="5.5" fill="rgb(var(--ink-800))" stroke={PATH_TONE[path.kind]} strokeWidth="2" />
                   <text
                     x={x}
                     y={y - 14}
                     textAnchor="middle"
                     fontSize="8.5"
                     fontFamily="var(--font-mono), monospace"
-                    fill="#8E8A7E"
+                    fill="rgb(var(--paper-sub))"
                     letterSpacing="0.8"
                   >
                     {b.label}
@@ -390,10 +390,10 @@ export function FutureScope({ scenarios }: { scenarios: Scenarios }) {
               )
             })}
 
-            <text x="40" y="274" fontSize="8.5" fontFamily="var(--font-mono), monospace" fill="#827E72" letterSpacing="1.4">
+            <text x="40" y="274" fontSize="8.5" fontFamily="var(--font-mono), monospace" fill="rgb(var(--paper-faint))" letterSpacing="1.4">
               NOW
             </text>
-            <text x="470" y="274" textAnchor="end" fontSize="8.5" fontFamily="var(--font-mono), monospace" fill="#827E72" letterSpacing="1.4">
+            <text x="470" y="274" textAnchor="end" fontSize="8.5" fontFamily="var(--font-mono), monospace" fill="rgb(var(--paper-faint))" letterSpacing="1.4">
               LATER
             </text>
           </svg>
@@ -426,7 +426,7 @@ export function FutureScope({ scenarios }: { scenarios: Scenarios }) {
               <ul className="space-y-2">
                 {path.dependsOn.map((d, i) => (
                   <li key={i} className="flex gap-2.5 text-[13.5px] leading-[1.55] text-paper-dim">
-                    <span aria-hidden="true" className="mt-[7px] h-1 w-1 shrink-0 rounded-full bg-lime" />
+                    <span aria-hidden="true" className="mt-[7px] h-1 w-1 shrink-0 rounded-full bg-action" />
                     {d}
                   </li>
                 ))}
@@ -434,7 +434,7 @@ export function FutureScope({ scenarios }: { scenarios: Scenarios }) {
             </div>
 
             <div className="rule-t mt-5 pt-4">
-              <p className="label mb-1.5 text-ember">It breaks if</p>
+              <p className="label mb-1.5 text-risk">It breaks if</p>
               <p className="max-w-measure text-[13.5px] leading-[1.6] text-paper-dim">{path.breaksIf}</p>
             </div>
 
@@ -472,7 +472,7 @@ export function FlightPlan({ launch }: { launch: LaunchPlan }) {
       {/* Timeline */}
       <div className="relative mb-12 overflow-x-auto pb-2">
         <div className="relative min-w-[620px]">
-          <div className="absolute inset-x-0 top-[38px] h-px bg-[rgba(243,238,226,0.2)]" aria-hidden="true" />
+          <div className="absolute inset-x-0 top-[38px] h-px bg-[rgb(var(--paper)/0.2)]" aria-hidden="true" />
           <ol className="relative flex justify-between">
             {launch.milestones.map((m, i) => {
               const on = m.id === openMilestone
@@ -490,8 +490,8 @@ export function FlightPlan({ launch }: { launch: LaunchPlan }) {
                       aria-hidden="true"
                       className="block h-3.5 w-3.5 rounded-full border-2"
                       style={{
-                        borderColor: on ? '#C8FB2E' : 'rgba(243,238,226,0.4)',
-                        background: on ? '#C8FB2E' : '#0C0E0B',
+                        borderColor: on ? 'rgb(var(--action-text))' : 'rgb(var(--paper)/0.4)',
+                        background: on ? 'rgb(var(--action-text))' : 'rgb(var(--ink-800))',
                       }}
                       initial={reduce ? false : { scale: 0.6, opacity: 0 }}
                       animate={{ scale: 1, opacity: 1 }}
@@ -527,7 +527,7 @@ export function FlightPlan({ launch }: { launch: LaunchPlan }) {
                 <p className="text-[14px] leading-[1.6] text-paper-dim">{m.owner}</p>
               </div>
               <div>
-                <p className="label mb-1 text-ember">Risk</p>
+                <p className="label mb-1 text-risk">Risk</p>
                 <p className="text-[14px] leading-[1.6] text-paper-dim">{m.risk}</p>
               </div>
             </motion.div>
@@ -540,7 +540,7 @@ export function FlightPlan({ launch }: { launch: LaunchPlan }) {
           <ol className="space-y-0">
             {launch.sevenDays.map((d) => (
               <li key={d.day} className="rule-t grid grid-cols-[36px_minmax(0,1fr)] gap-x-4 py-4">
-                <span aria-hidden="true" className="num font-mono text-[11px] text-lime">
+                <span aria-hidden="true" className="num font-mono text-[11px] text-action-text">
                   D{d.day}
                 </span>
                 <div>
@@ -573,8 +573,8 @@ export function FlightPlan({ launch }: { launch: LaunchPlan }) {
                       <p className="text-[13.5px] text-paper">{k.name}</p>
                       <p className="mt-0.5 max-w-[28ch] text-[12px] leading-[1.5] text-paper-faint">{k.definition}</p>
                     </td>
-                    <td className="num py-3.5 pr-5 font-mono text-[12.5px] text-lime">{k.target}</td>
-                    <td className="max-w-[22ch] py-3.5 text-[12.5px] leading-[1.5] text-ember">{k.failureThreshold}</td>
+                    <td className="num py-3.5 pr-5 font-mono text-[12.5px] text-action-text">{k.target}</td>
+                    <td className="max-w-[22ch] py-3.5 text-[12.5px] leading-[1.5] text-risk">{k.failureThreshold}</td>
                   </tr>
                 ))}
               </tbody>

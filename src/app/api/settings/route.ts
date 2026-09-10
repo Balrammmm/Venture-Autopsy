@@ -1,6 +1,7 @@
 import { db } from '@/lib/db'
 import { requireUser } from '@/lib/auth'
 import { modelInfo } from '@/lib/gemini'
+import { modelCallsLeft } from '@/lib/limits'
 import { handle, ok } from '@/lib/api'
 
 /** Reports whether the server has a key — never the key itself. */
@@ -14,6 +15,7 @@ export async function GET() {
     ])
     return ok({
       gemini: modelInfo(),
+      usage: await modelCallsLeft(user.id),
       profile: {
         name: user.name,
         email: user.email,

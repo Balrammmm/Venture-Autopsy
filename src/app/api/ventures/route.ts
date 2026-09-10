@@ -2,6 +2,7 @@ import { z } from 'zod'
 import { db } from '@/lib/db'
 import { requireUser } from '@/lib/auth'
 import { handle, ok } from '@/lib/api'
+import { readJson } from '@/lib/limits'
 
 const Create = z.object({
   rawIdea: z.string().min(40, 'Give the idea at least 40 characters — a fragment produces a generic autopsy.').max(6000),
@@ -41,7 +42,7 @@ export async function GET(req: Request) {
 export async function POST(req: Request) {
   try {
     const user = await requireUser()
-    const body = Create.parse(await req.json())
+    const body = Create.parse(await readJson(req))
 
     // A working title until the analysis names it properly.
     const provisional =

@@ -2,6 +2,7 @@ import { z } from 'zod'
 import { db } from '@/lib/db'
 import { requireVenture } from '@/lib/auth'
 import { handle, ok } from '@/lib/api'
+import { readJson } from '@/lib/limits'
 
 const Create = z.object({
   kind: z.enum(['url', 'competitor', 'review', 'interview', 'survey', 'note']),
@@ -25,7 +26,7 @@ export async function POST(req: Request, ctx: { params: Promise<{ id: string }> 
   try {
     const { id } = await ctx.params
     await requireVenture(id)
-    const body = Create.parse(await req.json())
+    const body = Create.parse(await readJson(req))
     const source = await db.researchSource.create({
       data: {
         ventureId: id,

@@ -1,12 +1,28 @@
 import { createHmac, randomBytes, timingSafeEqual } from 'crypto'
 import { cookies } from 'next/headers'
 import { db } from './db'
+import { BURST, burst } from './limits'
 
 const COOKIE = 'va_session'
 const MAX_AGE_DAYS = 30
 
+/**
+ * Session signing key.
+ *
+ * In production a missing secret is fatal rather than defaulted: a known
+ * fallback would let anyone forge a session cookie for any account. Locally it
+ * falls back, so `npm run dev` works before the env file is filled in.
+ */
 function secret() {
-  return process.env.SESSION_SECRET || 'venture-autopsy-dev-secret'
+  const value = process.env.SESSION_SECRET
+  if (value && value.length >= 16) return value
+
+  if (process.env.NODE_ENV === 'production') {
+    throw new Error(
+      'SESSION_SECRET is missing or too short. Set it to a long random string in the host environment.',
+    )
+  }
+  return 'venture-autopsy-dev-secret'
 }
 
 /**
@@ -83,9 +99,15 @@ export class Unauthorized extends Error {
   }
 }
 
+/**
+ * Every authenticated route funnels through here, so the burst limit lives
+ * here too — coverage by construction rather than by remembering to add a line
+ * to each new route. Routes that call the model charge extra on top.
+ */
 export async function requireUser() {
   const user = await getCurrentUser()
   if (!user) throw new Unauthorized()
+  burst(`user:${user.id}`, BURST.standard)
   return user
 }
 

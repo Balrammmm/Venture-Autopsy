@@ -71,11 +71,11 @@ const base =
 
 const variants: Record<string, string> = {
   primary:
-    'bg-lime text-ink-900 border border-lime hover:enabled:bg-[#D6FF57] hover:enabled:border-[#D6FF57] shadow-[0_2px_12px_-3px_rgba(200,251,46,0.4)]',
+    'bg-action text-action-ink border border-action hover:enabled:bg-[rgb(var(--action-text))] hover:enabled:border-[rgb(var(--action-text))] shadow-[0_2px_12px_-3px_rgb(var(--action)/0.4)]',
   ghost:
-    'border border-[rgba(243,238,226,0.18)] text-paper hover:enabled:border-[rgba(243,238,226,0.42)] hover:enabled:bg-[rgba(243,238,226,0.04)]',
-  quiet: 'text-paper-dim hover:enabled:text-paper hover:enabled:bg-[rgba(243,238,226,0.05)] border border-transparent',
-  danger: 'border border-[rgba(255,90,31,0.4)] text-ember hover:enabled:bg-ember-wash hover:enabled:border-ember',
+    'border border-[rgb(var(--paper)/0.18)] text-paper hover:enabled:border-[rgb(var(--paper)/0.42)] hover:enabled:bg-[rgb(var(--paper)/0.04)]',
+  quiet: 'text-paper-dim hover:enabled:text-paper hover:enabled:bg-[rgb(var(--paper)/0.05)] border border-transparent',
+  danger: 'border border-[rgb(var(--risk)/0.45)] text-risk hover:enabled:bg-risk-wash hover:enabled:border-risk',
 }
 
 const sizes: Record<string, string> = {
@@ -110,9 +110,9 @@ export function Chip({
 }) {
   const cls = `tap inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-[12.5px] transition-colors duration-150 ease-out ${
     active
-      ? 'border-lime bg-lime-wash text-lime'
-      : 'border-[rgba(243,238,226,0.16)] text-paper-dim'
-  } ${as === 'button' ? 'cursor-pointer hover:border-[rgba(243,238,226,0.38)] hover:text-paper disabled:cursor-not-allowed disabled:opacity-45' : ''} ${className}`
+      ? 'border-action bg-action-wash text-action-text'
+      : 'border-[rgb(var(--paper)/0.16)] text-paper-dim'
+  } ${as === 'button' ? 'cursor-pointer hover:border-[rgb(var(--paper)/0.38)] hover:text-paper disabled:cursor-not-allowed disabled:opacity-45' : ''} ${className}`
 
   if (as === 'span') {
     return (
@@ -139,9 +139,9 @@ const EVIDENCE_LABEL: Record<Evidence, string> = {
 }
 
 const EVIDENCE_TONE: Record<Evidence, string> = {
-  sourced: 'border-lime/45 text-lime',
-  user_provided: 'border-[rgba(243,238,226,0.34)] text-paper-dim',
-  hypothesis: 'border-[rgba(243,238,226,0.2)] text-paper-faint',
+  sourced: 'border-action/45 text-action-text',
+  user_provided: 'border-[rgb(var(--paper)/0.34)] text-paper-dim',
+  hypothesis: 'border-[rgb(var(--paper)/0.2)] text-paper-faint',
 }
 
 export function EvidenceTag({ evidence, className = '' }: { evidence: Evidence | string; className?: string }) {
@@ -152,7 +152,7 @@ export function EvidenceTag({ evidence, className = '' }: { evidence: Evidence |
     >
       <span
         aria-hidden="true"
-        className={`h-1 w-1 rounded-full ${key === 'sourced' ? 'bg-lime' : key === 'user_provided' ? 'bg-paper-dim' : 'bg-paper-faint'}`}
+        className={`h-1 w-1 rounded-full ${key === 'sourced' ? 'bg-action' : key === 'user_provided' ? 'bg-paper-dim' : 'bg-paper-faint'}`}
       />
       {EVIDENCE_LABEL[key]}
     </span>
@@ -164,7 +164,7 @@ export function IntegrityNote({ evidence, className = '' }: { evidence: string; 
     <p className={`max-w-measure text-[12.5px] leading-relaxed text-paper-faint ${className}`}>
       {evidence === 'sourced' ? (
         <>
-          Claims marked <span className="text-lime">Sourced</span> trace to a link with a timestamp. Everything else
+          Claims marked <span className="text-action-text">Sourced</span> trace to a link with a timestamp. Everything else
           is a hypothesis derived from your description — not researched, not verified, and not a fact.
         </>
       ) : evidence === 'user_provided' ? (
@@ -192,7 +192,7 @@ export const Textarea = forwardRef<HTMLTextAreaElement, TextareaHTMLAttributes<H
     return (
       <textarea
         ref={ref}
-        className={`w-full resize-y rounded-[3px] border border-[rgba(243,238,226,0.16)] bg-[rgba(243,238,226,0.03)] px-3.5 py-3 text-[14.5px] leading-relaxed text-paper transition-colors duration-150 ease-out placeholder:text-paper-faint hover:border-[rgba(243,238,226,0.28)] focus:border-lime/60 focus:outline-none ${className}`}
+        className={`w-full resize-y rounded-[3px] border border-[rgb(var(--paper)/0.16)] bg-[rgb(var(--paper)/0.03)] px-3.5 py-3 text-[14.5px] leading-relaxed text-paper transition-colors duration-150 ease-out placeholder:text-paper-faint hover:border-[rgb(var(--paper)/0.28)] focus:border-action/60 focus:outline-none ${className}`}
         {...rest}
       />
     )
@@ -206,7 +206,7 @@ export const Input = forwardRef<HTMLInputElement, InputHTMLAttributes<HTMLInputE
   return (
     <input
       ref={ref}
-      className={`h-11 w-full rounded-[3px] border border-[rgba(243,238,226,0.16)] bg-[rgba(243,238,226,0.03)] px-3.5 text-[14px] text-paper transition-colors duration-150 ease-out placeholder:text-paper-faint hover:border-[rgba(243,238,226,0.28)] focus:border-lime/60 focus:outline-none ${className}`}
+      className={`h-11 w-full rounded-[3px] border border-[rgb(var(--paper)/0.16)] bg-[rgb(var(--paper)/0.03)] px-3.5 text-[14px] text-paper transition-colors duration-150 ease-out placeholder:text-paper-faint hover:border-[rgb(var(--paper)/0.28)] focus:border-action/60 focus:outline-none ${className}`}
       {...rest}
     />
   )
@@ -234,7 +234,7 @@ export function Field({
       </label>
       {children}
       {error ? (
-        <p className="mt-1.5 text-[12.5px] text-ember">{error}</p>
+        <p className="mt-1.5 text-[12.5px] text-risk">{error}</p>
       ) : hint ? (
         <p className="mt-1.5 text-[12.5px] text-paper-faint">{hint}</p>
       ) : null}
@@ -264,7 +264,7 @@ export function ScoreBar({
           <span
             key={i}
             className={`h-[3px] w-4 rounded-full ${
-              i < v ? (tone === 'ember' ? 'bg-ember' : 'bg-lime') : 'bg-[rgba(243,238,226,0.14)]'
+              i < v ? (tone === 'ember' ? 'bg-risk' : 'bg-action') : 'bg-[rgb(var(--paper)/0.14)]'
             }`}
           />
         ))}
@@ -311,9 +311,9 @@ export function ErrorNote({
   className?: string
 }) {
   return (
-    <div role="alert" className={`border-l-2 border-ember bg-ember-wash px-4 py-3.5 ${className}`}>
+    <div role="alert" className={`border-l-2 border-risk bg-risk-wash px-4 py-3.5 ${className}`}>
       <p className="flex items-center gap-2 text-[13.5px] text-paper">
-        <IconAlert size={14} className="shrink-0 text-ember" />
+        <IconAlert size={14} className="shrink-0 text-risk" />
         {title || 'That did not work'}
       </p>
       <p className="mt-1 max-w-measure text-[13px] leading-relaxed text-paper-dim">{message}</p>

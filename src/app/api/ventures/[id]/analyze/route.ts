@@ -2,6 +2,7 @@ import { z } from 'zod'
 import { db } from '@/lib/db'
 import { requireVenture } from '@/lib/auth'
 import { handle, ok } from '@/lib/api'
+import { BURST, burst, readJson, spendModelCall } from '@/lib/limits'
 import { evidenceBlock, founderBlock, generateAtlas, runResearchPass } from '@/lib/gemini'
 import { SECTION_KEYS } from '@/lib/atlas-types'
 import type { AtlasPayload } from '@/lib/atlas-types'
@@ -17,11 +18,22 @@ export const maxDuration = 120
  */
 export async function POST(req: Request, ctx: { params: Promise<{ id: string }> }) {
   const { id } = await ctx.params
+  // Only the failure path that actually moved the venture into "analysing" is
+  // allowed to move it back; a rate-limited call must not downgrade a venture
+  // that is already analysed.
+  let marked = false
   try {
     const { user, venture } = await requireVenture(id)
-    const body = Body.parse(await req.json().catch(() => ({})))
+    const body = Body.parse(await readJson(req))
+
+    // Burst first, then the daily allowance. Both are charged before the model
+    // is called, so a failed generation cannot be used to farm free retries.
+    burst(`analyze:${user.id}`, BURST.model)
+    await spendModelCall(user.id)
+    if (body.research) await spendModelCall(user.id)
 
     await db.venture.update({ where: { id }, data: { stage: 'analysing' } })
+    marked = true
 
     let researchSummary: string | undefined
     let groundedCount = 0
@@ -152,7 +164,7 @@ export async function POST(req: Request, ctx: { params: Promise<{ id: string }> 
     return ok({ ok: true, ventureId: id, grounded: groundedCount, researched: body.research === true })
   } catch (err) {
     // Never strand a venture in "analysing" — the library would show a spinner forever.
-    await db.venture.update({ where: { id }, data: { stage: 'captured' } }).catch(() => {})
+    if (marked) await db.venture.update({ where: { id }, data: { stage: 'captured' } }).catch(() => {})
     return handle(err)
   }
 }

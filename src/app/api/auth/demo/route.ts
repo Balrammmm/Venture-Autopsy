@@ -2,6 +2,7 @@ import { z } from 'zod'
 import { db } from '@/lib/db'
 import { createSession } from '@/lib/auth'
 import { handle, ok } from '@/lib/api'
+import { BURST, burst, clientKey, readJson } from '@/lib/limits'
 
 const Body = z.object({
   email: z.string().email('Enter a valid email address.'),
@@ -11,7 +12,11 @@ const Body = z.object({
 /** Demo sign-in: no password by design. Creates the user on first use. */
 export async function POST(req: Request) {
   try {
-    const { email, name } = Body.parse(await req.json())
+    // Unauthenticated, and it creates rows — so it is keyed by client address
+    // rather than by user, and held tight.
+    burst(`demo:${clientKey(req)}`, BURST.auth)
+
+    const { email, name } = Body.parse(await readJson(req))
     const normalised = email.trim().toLowerCase()
 
     const user = await db.user.upsert({

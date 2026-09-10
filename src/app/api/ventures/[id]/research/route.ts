@@ -1,6 +1,7 @@
 import { db } from '@/lib/db'
 import { requireVenture } from '@/lib/auth'
 import { handle, ok } from '@/lib/api'
+import { BURST, burst, spendModelCall } from '@/lib/limits'
 import { runResearchPass } from '@/lib/gemini'
 
 export const maxDuration = 90
@@ -9,7 +10,11 @@ export const maxDuration = 90
 export async function POST(_req: Request, ctx: { params: Promise<{ id: string }> }) {
   try {
     const { id } = await ctx.params
-    const { venture } = await requireVenture(id)
+    const { user, venture } = await requireVenture(id)
+
+    // Grounded search is the most expensive call the product makes.
+    burst(`research:${user.id}`, BURST.model)
+    await spendModelCall(user.id)
 
     const { findings, summary, grounded } = await runResearchPass(venture.rawIdea)
 

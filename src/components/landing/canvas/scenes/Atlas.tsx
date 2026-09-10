@@ -118,7 +118,7 @@ function Minefield({ kit, life }: { kit: Kit; life: number }) {
     <group rotation={[0.42, 0, 0]}>
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.42, 0]}>
         <planeGeometry args={[2.2, 1.9, 10, 8]} />
-        <meshBasicMaterial color={kit.p.rule} wireframe transparent opacity={0.35} />
+        <meshBasicMaterial color={kit.p.rule} wireframe transparent opacity={0.18} />
       </mesh>
       {nodes.map((n, i) => {
         // Height carries impact; the pulse rate carries uncertainty.
@@ -204,7 +204,7 @@ function Terrain({ kit, life }: { kit: Kit; life: number }) {
   return (
     <group rotation={[-0.92, 0, 0.2]}>
       <mesh ref={ref} geometry={geo}>
-        <meshBasicMaterial color={kit.p.intel} wireframe transparent opacity={0.7} />
+        <meshBasicMaterial color={kit.p.intel} wireframe transparent opacity={0.42} />
       </mesh>
       {/* Where you actually stand on it. */}
       <mesh position={[0.2, -0.1, 0.3]}>
@@ -550,35 +550,36 @@ export function Atlas({ scroll, pointer, active, onHover, onSelect }: AtlasProps
     restRefs.current.forEach((el, i) => {
       if (!el) return
       const spread = (i - (N - 1) / 2) / (N - 1)
-      const x = spread * 3.4
-      const y = -1.45 + Math.abs(spread) * 0.22
-      const z = -2.1 - Math.abs(spread) * 0.5
+      const x = spread * 3.6
+      const y = -1.52 + Math.abs(spread) * 0.2
+      // Further back than before, and the outer tokens fall away hardest, so
+      // the row reads as depth rather than as a second row of subjects.
+      const z = -3.4 - Math.abs(spread) * 1.1
       const isActive = i === active
-      el.position.set(x, isActive ? y + 0.18 : y, z)
-      el.scale.setScalar(isActive ? 0.001 : 0.62)
-      el.rotation.y = st.clock.elapsedTime * 0.12 + i
+      el.position.set(x, isActive ? y + 0.16 : y, z)
+      el.scale.setScalar(isActive ? 0.001 : 0.46)
+      // A slow, shared drift rather than nine independent spins.
+      el.rotation.y = 0.3 + Math.sin(st.clock.elapsedTime * 0.18 + i * 0.7) * 0.16
     })
 
-    if (core.current) {
-      core.current.rotation.y += delta * 0.1
-    }
+    // The floor rules stay put. Nothing in this scene rotates for decoration.
   })
 
   return (
     <group ref={root}>
-      {/* The venture core the instruments are calibrated against. */}
-      <group ref={core} position={[0, 0, -1.5]}>
+      {/*
+        The bench needs a floor, not a backdrop. Two hairlines far behind give
+        the row somewhere to stand and stop the instrument floating in a void.
+        They do not move, do not rotate, and never read as an object.
+      */}
+      <group ref={core} position={[0, -1.62, -2.6]}>
         <mesh>
-          <icosahedronGeometry args={[0.4, 1]} />
-          <meshStandardMaterial
-            color={kit.p.intel}
-            transparent
-            opacity={0.16}
-            roughness={0.1}
-            metalness={0.3}
-            side={THREE.DoubleSide}
-          />
-          <Edges threshold={1} color={kit.p.intel} />
+          <planeGeometry args={[7.4, 0.006]} />
+          <meshBasicMaterial color={kit.p.rule} transparent opacity={0.5} />
+        </mesh>
+        <mesh position={[0, -0.28, 0.5]}>
+          <planeGeometry args={[5.2, 0.005]} />
+          <meshBasicMaterial color={kit.p.rule} transparent opacity={0.28} />
         </mesh>
       </group>
 

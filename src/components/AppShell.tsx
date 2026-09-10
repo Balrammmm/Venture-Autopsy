@@ -4,6 +4,8 @@ import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import { Button, IconLogout, IconSettings } from '@/components/ui/kit'
+import { BrandMark } from '@/components/brand/BrandMark'
+import { ThemeToggle } from '@/components/landing/ui/LandingChrome'
 import { post } from '@/lib/client'
 
 export interface SessionUser {
@@ -46,12 +48,10 @@ export function AppShell({
     <div className="grain relative min-h-screen bg-ink-800">
       <div className="grid-field pointer-events-none absolute inset-0 opacity-25" aria-hidden="true" />
 
-      <header className="no-print sticky top-0 z-40 border-b border-[color:var(--rule)] bg-ink-800/85 backdrop-blur-xl">
+      <header className="no-print sticky top-0 z-40 border-b border-[color:var(--rule)] bg-[rgb(var(--ink-800)/0.85)] backdrop-blur-xl">
         <div className={`mx-auto flex items-center justify-between gap-4 px-4 py-3 md:px-8 ${wide ? 'max-w-[1700px]' : 'max-w-[1500px]'}`}>
           <div className="flex min-w-0 flex-1 items-center gap-3">
-            <Link href="/ventures" className="tap display flex shrink-0 items-center text-[17px] tracking-tightest text-paper">
-              Venture Autopsy
-            </Link>
+            <BrandMark href="/ventures" compact className="shrink-0" />
             {breadcrumb && (
               <>
                 <span aria-hidden="true" className="hidden shrink-0 text-paper-sub sm:inline">
@@ -64,11 +64,12 @@ export function AppShell({
 
           <div className="flex shrink-0 items-center gap-1.5">
             {actions}
+            <ThemeToggle className="mr-1 hidden sm:inline-flex" />
             <Link
               href="/settings"
               aria-label="Settings"
               aria-current={pathname === '/settings' ? 'page' : undefined}
-              className="tap inline-flex items-center justify-center rounded-[3px] px-2.5 py-2 text-paper-dim transition-colors duration-150 hover:bg-[rgba(243,238,226,0.05)] hover:text-paper"
+              className="tap inline-flex items-center justify-center rounded-[3px] px-2.5 py-2 text-paper-dim transition-colors duration-150 hover:bg-[rgb(var(--paper)/0.05)] hover:text-paper"
             >
               <IconSettings size={15} />
             </Link>

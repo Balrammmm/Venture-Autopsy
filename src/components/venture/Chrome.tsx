@@ -45,7 +45,7 @@ export function VentureNav({ id }: { id: string }) {
             {active && (
               <motion.span
                 layoutId="venture-tab"
-                className="absolute inset-x-2 -bottom-px h-px bg-lime"
+                className="absolute inset-x-2 -bottom-px h-px bg-action"
                 transition={{ type: 'spring', duration: 0.4, bounce: 0.14 }}
               />
             )}
@@ -119,7 +119,7 @@ export function ModuleFrame({
       </div>
 
       {error && (
-        <div role="alert" className="mb-6 border-l-2 border-ember bg-ember-wash px-4 py-3 text-[13.5px] text-paper-dim">
+        <div role="alert" className="mb-6 border-l-2 border-risk bg-risk-wash px-4 py-3 text-[13.5px] text-paper-dim">
           {error}
         </div>
       )}

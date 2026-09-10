@@ -7,15 +7,15 @@ import type { Verdict } from '@/lib/atlas-types'
 import type { VentureApi, VentureRow } from './useVenture'
 
 const VERDICT_TONE: Record<string, string> = {
-  'High Risk': 'text-ember',
-  Promising: 'text-lime',
+  'High Risk': 'text-risk',
+  Promising: 'text-action-text',
   'Needs Validation': 'text-paper',
 }
 
 /** A health dial that reads as an instrument, not a progress ring. */
 function HealthDial({ score, accent }: { score: number; accent: string }) {
   const reduce = useReducedMotion()
-  const color = accent === 'ember' ? '#FF5A1F' : '#C8FB2E'
+  const color = accent === 'ember' ? 'rgb(var(--risk))' : 'rgb(var(--action-text))'
   const ticks = 40
   const lit = Math.round((score / 100) * ticks)
 
@@ -34,7 +34,7 @@ function HealthDial({ score, accent }: { score: number; accent: string }) {
             y1={60 + Math.sin(a) * r1}
             x2={60 + Math.cos(a) * r2}
             y2={60 + Math.sin(a) * r2}
-            stroke={on ? color : 'rgba(243,238,226,0.16)'}
+            stroke={on ? color : 'rgb(var(--paper)/0.16)'}
             strokeWidth={on ? 2.4 : 1.2}
             strokeLinecap="round"
             initial={reduce ? false : { opacity: 0 }}
@@ -50,11 +50,11 @@ function HealthDial({ score, accent }: { score: number; accent: string }) {
         fontSize="24"
         fontWeight="700"
         fontFamily="var(--font-mono), monospace"
-        fill="#F3EEE2"
+        fill="rgb(var(--paper))"
       >
         {score}
       </text>
-      <text x="60" y="80" textAnchor="middle" fontSize="7.5" fontFamily="var(--font-mono), monospace" fill="#827E72" letterSpacing="1.6">
+      <text x="60" y="80" textAnchor="middle" fontSize="7.5" fontFamily="var(--font-mono), monospace" fill="rgb(var(--paper-faint))" letterSpacing="1.6">
         ESTABLISHED
       </text>
     </svg>

@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { ZodError } from 'zod'
 import { GeminiError } from './gemini'
 import { Unauthorized } from './auth'
+import { PayloadTooLarge, RateLimited } from './limits'
 
 export function ok<T>(data: T, status = 200) {
   return NextResponse.json(data, { status })
@@ -17,6 +18,16 @@ export function fail(message: string, status = 400, hint?: string) {
  */
 export function handle(err: unknown) {
   if (err instanceof Unauthorized) return fail('You need to sign in.', 401, 'Open the app and use the demo sign-in.')
+  if (err instanceof RateLimited) {
+    return NextResponse.json(
+      { error: err.message, hint: err.hint },
+      { status: 429, headers: { 'Retry-After': String(err.retryAfter) } },
+    )
+  }
+  if (err instanceof PayloadTooLarge) return fail(err.message, 413, err.hint)
+  if (err instanceof Error && err.name === 'BadJson') {
+    return fail(err.message, 400, 'The client sent something malformed. Reload and try again.')
+  }
   if (err instanceof GeminiError) return fail(err.message, err.status, err.hint)
   if (err instanceof ZodError) {
     const first = err.errors[0]

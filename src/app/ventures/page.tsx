@@ -112,7 +112,7 @@ export default function VenturesPage() {
 
         {/* Composer */}
         {composing && (
-          <section className="mb-10 rounded-[3px] border border-[rgba(243,238,226,0.14)] p-5">
+          <section className="mb-10 rounded-[3px] border border-[rgb(var(--paper)/0.14)] p-5">
             <label htmlFor="new-idea" className="label mb-2 block">
               The idea
             </label>
@@ -126,7 +126,7 @@ export default function VenturesPage() {
             />
             <p className="mt-2 text-[12.5px] text-paper-faint" aria-live="polite">
               <span className="num font-mono text-paper-sub">{idea.trim().length}</span> characters
-              {idea.trim().length > 0 && idea.trim().length < 40 && <span className="text-ember"> · 40 minimum</span>}
+              {idea.trim().length > 0 && idea.trim().length < 40 && <span className="text-risk"> · 40 minimum</span>}
             </p>
 
             <div className="mt-3 flex flex-wrap gap-2">
@@ -165,7 +165,7 @@ export default function VenturesPage() {
         {showSkeleton ? (
           <div className="space-y-4" aria-busy="true" aria-label="Loading ventures">
             {[0, 1, 2].map((i) => (
-              <div key={i} className="flex items-start gap-5 rounded-[3px] border border-[rgba(243,238,226,0.1)] p-5">
+              <div key={i} className="flex items-start gap-5 rounded-[3px] border border-[rgb(var(--paper)/0.1)] p-5">
                 <Skeleton className="h-[76px] w-[76px] shrink-0 rounded-full md:h-[92px] md:w-[92px]" />
                 <div className="flex-1 space-y-2.5">
                   <Skeleton className="h-6 w-2/5" />

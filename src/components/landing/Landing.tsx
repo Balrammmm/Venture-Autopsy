@@ -9,6 +9,7 @@ import { Act, Z } from './layout/Stage'
 import { LandingStage } from './LandingStage'
 import { AnalysisLens, HoverReadout, ProgressRail, ThemeToggle } from './ui/LandingChrome'
 import { InlineCta, PrimaryCta, SecondaryCta } from './ui/Cta'
+import { BrandMark } from '@/components/brand/BrandMark'
 import { KineticLine, KineticResolve, KineticSlide } from './KineticType'
 import { ATLAS_MODULES, type AtlasModule } from './canvas/scenes/Atlas'
 import type { CanvasHandlers, PointerState } from './canvas/LandingCanvas'
@@ -266,12 +267,7 @@ function LandingInner() {
           }}
         />
         <div className="relative mx-auto flex max-w-[1600px] items-center justify-between gap-4 px-5 py-4 md:px-8">
-          <Link href="/" className="tap flex items-baseline gap-2.5">
-            <span className="display text-[19px] tracking-tightest text-paper">Venture Autopsy</span>
-            <span className="hidden font-mono text-[10px] uppercase tracking-[0.2em] text-paper-faint sm:inline">
-              Validation lab
-            </span>
-          </Link>
+          <BrandMark href="/" />
           <nav className="flex items-center gap-3">
             <ThemeToggle />
             <button
@@ -451,21 +447,22 @@ function LandingInner() {
       >
         <div className="mx-auto grid max-w-[1600px] grid-cols-1 gap-8 px-5 py-14 md:grid-cols-[minmax(0,1fr)_auto] md:px-8">
           <div>
-            <p className="display text-[1.6rem] leading-none text-paper">Venture Autopsy</p>
-            <p className="mt-3 max-w-[52ch] text-[13px] leading-[1.7] text-paper-faint">
-              A validation lab for one idea at a time. Runs locally against your own Gemini key; ventures are
-              stored in a database on this machine.
+            <BrandMark href={null} />
+            <p className="mt-4 max-w-[46ch] text-[13px] leading-[1.7] text-paper-faint">
+              A validation lab for one idea at a time.
             </p>
           </div>
-          <nav className="flex items-end gap-7 md:justify-end" aria-label="Footer">
+          <nav className="flex flex-wrap items-end gap-x-7 gap-y-3 md:justify-end" aria-label="Footer">
             {[
-              ['Start', '/onboarding'],
-              ['Ventures', '/ventures'],
-              ['Settings', '/settings'],
+              ['Privacy', '/privacy'],
+              ['Terms', '/terms'],
+              ['Contact', '/contact'],
+              ['GitHub', 'https://github.com/Balrammmm/Venture-Autopsy'],
             ].map(([label, href]) => (
               <Link
                 key={href}
                 href={href}
+                {...(href.startsWith('http') ? { target: '_blank', rel: 'noreferrer noopener' } : {})}
                 className="tap group relative inline-flex items-center text-[13px] text-paper-dim transition-colors duration-150 hover:text-action-text"
               >
                 {label}
@@ -532,11 +529,10 @@ function StepDots({ count, current, compact }: { count: number; current: number;
 }
 
 export function Landing() {
+  // The theme provider lives at the root layout now, so every page shares it.
   return (
-    <ThemeProvider>
-      <ScrollDirector>
-        <LandingInner />
-      </ScrollDirector>
-    </ThemeProvider>
+    <ScrollDirector>
+      <LandingInner />
+    </ScrollDirector>
   )
 }

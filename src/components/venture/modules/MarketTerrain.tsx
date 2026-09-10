@@ -28,8 +28,8 @@ export function MarketTerrain({ market }: { market: MarketTerrainData }) {
           >
             <defs>
               <linearGradient id="terrain-sky" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor="#C8FB2E" stopOpacity="0.05" />
-                <stop offset="100%" stopColor="#C8FB2E" stopOpacity="0" />
+                <stop offset="0%" stopColor="rgb(var(--action-text))" stopOpacity="0.05" />
+                <stop offset="100%" stopColor="rgb(var(--action-text))" stopOpacity="0" />
               </linearGradient>
             </defs>
 
@@ -49,7 +49,7 @@ export function MarketTerrain({ market }: { market: MarketTerrainData }) {
                   key={i}
                   d={d}
                   fill="none"
-                  stroke="rgba(243,238,226,0.2)"
+                  stroke="rgb(var(--paper)/0.2)"
                   strokeWidth={1.2 - i * 0.2}
                   strokeDasharray={i === 0 ? undefined : '4 6'}
                 />
@@ -71,16 +71,16 @@ export function MarketTerrain({ market }: { market: MarketTerrainData }) {
               return (
                 <g key={p.id} className="cursor-pointer" onClick={() => setActive(p.id)}>
                   {/* A standing figure, drawn rather than a dot. */}
-                  <line x1={cx} y1={cy} x2={cx} y2={cy - 22} stroke={on ? '#C8FB2E' : 'rgba(243,238,226,0.5)'} strokeWidth={on ? 2.4 : 1.5} strokeLinecap="round" />
-                  <circle cx={cx} cy={cy - 28} r={on ? 6.5 : 5} fill={on ? '#C8FB2E' : '#0C0E0B'} stroke={on ? '#C8FB2E' : 'rgba(243,238,226,0.5)'} strokeWidth="1.5" />
-                  <ellipse cx={cx} cy={cy + 3} rx={on ? 15 : 11} ry="3.5" fill={on ? '#C8FB2E' : '#F3EEE2'} fillOpacity="0.12" />
+                  <line x1={cx} y1={cy} x2={cx} y2={cy - 22} stroke={on ? 'rgb(var(--action-text))' : 'rgb(var(--paper)/0.5)'} strokeWidth={on ? 2.4 : 1.5} strokeLinecap="round" />
+                  <circle cx={cx} cy={cy - 28} r={on ? 6.5 : 5} fill={on ? 'rgb(var(--action-text))' : 'rgb(var(--ink-800))'} stroke={on ? 'rgb(var(--action-text))' : 'rgb(var(--paper)/0.5)'} strokeWidth="1.5" />
+                  <ellipse cx={cx} cy={cy + 3} rx={on ? 15 : 11} ry="3.5" fill={on ? 'rgb(var(--action-text))' : 'rgb(var(--paper))'} fillOpacity="0.12" />
                   <text
                     x={cx}
                     y={cy + 18}
                     textAnchor="middle"
                     fontSize="8"
                     fontFamily="var(--font-mono), monospace"
-                    fill={on ? '#F3EEE2' : '#827E72'}
+                    fill={on ? 'rgb(var(--paper))' : 'rgb(var(--paper-faint))'}
                     letterSpacing="1.1"
                   >
                     {p.name.toUpperCase()}
@@ -108,7 +108,7 @@ export function MarketTerrain({ market }: { market: MarketTerrainData }) {
               className="lg:sticky lg:top-28 lg:self-start"
             >
               <h3 className="display text-[1.7rem] leading-tight text-paper">{persona.name}</h3>
-              <p className="mt-1 text-[12.5px] text-lime">{persona.role}</p>
+              <p className="mt-1 text-[12.5px] text-action-text">{persona.role}</p>
               <p className="mt-3 text-[13.5px] leading-[1.62] text-paper-dim">{persona.context}</p>
 
               <dl className="mt-5 space-y-4">
@@ -125,7 +125,7 @@ export function MarketTerrain({ market }: { market: MarketTerrainData }) {
                   </div>
                 ))}
                 <div className="rule-t pt-3.5">
-                  <dt className="label mb-1 text-ember">Objection</dt>
+                  <dt className="label mb-1 text-risk">Objection</dt>
                   <dd className="text-[13.5px] leading-[1.6] text-paper-dim">{persona.objection}</dd>
                 </div>
               </dl>
@@ -140,7 +140,7 @@ export function MarketTerrain({ market }: { market: MarketTerrainData }) {
           <div className="mb-3 flex items-center justify-between gap-3">
             <h3 className="text-[15px] text-paper">What is already there</h3>
           </div>
-          <p className="mb-4 max-w-measure border-l-2 border-ember pl-4 text-[12.5px] leading-[1.6] text-paper-faint">
+          <p className="mb-4 max-w-measure border-l-2 border-risk pl-4 text-[12.5px] leading-[1.6] text-paper-faint">
             {market.note}
           </p>
           <ul className="space-y-0">
@@ -164,7 +164,7 @@ export function MarketTerrain({ market }: { market: MarketTerrainData }) {
                 <p className="text-[14px] leading-[1.45] text-paper">{g.gap}</p>
                 <p className="mt-1.5 text-[13px] leading-[1.55] text-paper-dim">{g.whyItExists}</p>
                 <p className="mt-1.5 flex gap-2 text-[13px] leading-[1.55] text-paper-faint">
-                  <IconAlert size={13} className="mt-0.5 shrink-0 text-ember" />
+                  <IconAlert size={13} className="mt-0.5 shrink-0 text-risk" />
                   {g.risk}
                 </p>
               </li>
@@ -178,7 +178,7 @@ export function MarketTerrain({ market }: { market: MarketTerrainData }) {
             {market.researchGaps.map((g, i) => (
               <li key={i} className="rule-t py-3.5">
                 <p className="text-[14px] leading-[1.45] text-paper">{g.question}</p>
-                <p className="mt-1.5 flex gap-2 text-[13px] leading-[1.55] text-lime">
+                <p className="mt-1.5 flex gap-2 text-[13px] leading-[1.55] text-action-text">
                   <IconArrow size={13} className="mt-0.5 shrink-0" />
                   {g.howToAnswer}
                 </p>

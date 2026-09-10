@@ -118,6 +118,7 @@ export function Resolution({
   const plateRefs = useRef<(THREE.Group | null)[]>([])
   const nodeRefs = useRef<(THREE.Mesh | null)[]>([])
   const pool = useRef<THREE.Mesh>(null)
+  const ringRefs = useRef<(THREE.Group | null)[]>([])
   const revealRef = useRef(0)
 
   const tmp = useMemo(() => new THREE.Vector3(), [])
@@ -168,7 +169,27 @@ export function Resolution({
       // Overshoot: rises slightly past its resting height, then drops back.
       const overshoot = Math.sin(settle * Math.PI) * 0.08
       structure.current.position.y = -0.25 + assemble * 0.25 + overshoot
+      // Grows into the frame as it builds, so the finished thing has presence.
+      structure.current.scale.setScalar(1.06 + assemble * 0.26)
     }
+
+    // The nine instruments arrive from the Atlas and take their places around
+    // the plinth — the tools that produced the thing, set down beside it.
+    ringRefs.current.forEach((el, i) => {
+      if (!el) return
+      const a = (i / 9) * Math.PI * 2
+      const land = ease(Math.min(1, Math.max(0, (assemble - 0.34) / 0.5 - i * 0.045)))
+      const R = 1.58
+      el.position.set(
+        Math.cos(a) * R * (0.4 + land * 0.6),
+        -1.3 + (1 - land) * 2.4,
+        Math.sin(a) * R * (0.4 + land * 0.6),
+      )
+      el.scale.setScalar(land * 0.13)
+      el.rotation.y = a + time * 0.06
+      const m = (el.children[0] as THREE.Mesh)?.material as THREE.Material & { opacity: number }
+      if (m) m.opacity = land * 0.85
+    })
 
     tiers.forEach((tier, i) => {
       const el = plateRefs.current[i]
@@ -248,6 +269,34 @@ export function Resolution({
         ))}
 
         <Joints kit={kit} tiers={tiers} reveal={revealRef} />
+
+        {/*
+          The nine Atlas instruments, arrived and set down around the plinth.
+          Same hexagonal token the Atlas bench used, so the object the reader
+          has been clicking through is recognisably the one that lands here.
+        */}
+        {Array.from({ length: 9 }, (_, i) => (
+          <group
+            key={`ring${i}`}
+            ref={(el) => {
+              ringRefs.current[i] = el
+            }}
+            scale={0.001}
+          >
+            <mesh>
+              <cylinderGeometry args={[0.85, 0.85, 0.34, 6]} />
+              <meshStandardMaterial
+                color={i % 3 === 0 ? kit.p.action : i % 3 === 1 ? kit.p.intel : kit.p.signal}
+                emissive={i % 3 === 0 ? kit.p.action : i % 3 === 1 ? kit.p.intel : kit.p.signal}
+                emissiveIntensity={0.42}
+                roughness={0.4}
+                metalness={0.3}
+                transparent
+                opacity={0}
+              />
+            </mesh>
+          </group>
+        ))}
 
         {/* Illuminated junctions. */}
         {tiers.map((tier, i) => (

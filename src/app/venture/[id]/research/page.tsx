@@ -143,7 +143,7 @@ function ResearchPage({ id }: { id: string }) {
         </div>
 
         {researchNote && (
-          <p className="mb-6 border-l-2 border-lime bg-lime-wash px-4 py-3 text-[13.5px] leading-relaxed text-paper-dim" role="status">
+          <p className="mb-6 border-l-2 border-action bg-action-wash px-4 py-3 text-[13.5px] leading-relaxed text-paper-dim" role="status">
             {researchNote}
           </p>
         )}
@@ -198,11 +198,11 @@ function ResearchPage({ id }: { id: string }) {
               Attach evidence
             </Button>
 
-            <p className="mt-4 flex gap-2.5 border-l-2 border-[rgba(243,238,226,0.2)] pl-4 text-[12.5px] leading-relaxed text-paper-faint">
+            <p className="mt-4 flex gap-2.5 border-l-2 border-[rgb(var(--paper)/0.2)] pl-4 text-[12.5px] leading-relaxed text-paper-faint">
               <IconAlert size={13} className="mt-0.5 shrink-0" />
               <span>
                 Evidence you paste is marked <span className="text-paper-dim">your evidence</span>, not{' '}
-                <span className="text-lime">sourced</span>. Only the grounded search, which returns a real link and a
+                <span className="text-action-text">sourced</span>. Only the grounded search, which returns a real link and a
                 timestamp, can produce a sourced claim.
               </span>
             </p>
@@ -238,7 +238,7 @@ function ResearchPage({ id }: { id: string }) {
                   <li key={s.id} className="rule-t flex items-start justify-between gap-4 py-4">
                     <div className="min-w-0">
                       <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5">
-                        <span className="font-mono text-[10px] uppercase tracking-[0.14em] text-lime">{s.kind}</span>
+                        <span className="font-mono text-[10px] uppercase tracking-[0.14em] text-action-text">{s.kind}</span>
                         <p className="text-[14px] text-paper">{s.title}</p>
                         <EvidenceTag evidence={s.evidence} />
                       </div>
@@ -247,7 +247,7 @@ function ResearchPage({ id }: { id: string }) {
                           href={s.url}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="mt-1 inline-flex items-center gap-1.5 break-all text-[12.5px] text-paper-faint underline decoration-[rgba(243,238,226,0.24)] transition-colors duration-150 hover:text-lime"
+                          className="mt-1 inline-flex items-center gap-1.5 break-all text-[12.5px] text-paper-faint underline decoration-[rgb(var(--paper)/0.24)] transition-colors duration-150 hover:text-action-text"
                         >
                           <IconLink size={12} />
                           {s.url}

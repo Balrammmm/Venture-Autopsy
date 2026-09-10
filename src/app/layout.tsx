@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from 'next'
 import { Archivo, Instrument_Serif, JetBrains_Mono } from 'next/font/google'
 import '@/styles/globals.css'
 import { themeScript } from '@/components/landing/theme/theme-script'
+import { ThemeProvider } from '@/components/landing/theme/ThemeProvider'
 
 const display = Instrument_Serif({
   subsets: ['latin'],
@@ -34,8 +35,8 @@ export const metadata: Metadata = {
 
 export const viewport: Viewport = {
   themeColor: [
-    { media: '(prefers-color-scheme: dark)', color: '#0C0E0B' },
-    { media: '(prefers-color-scheme: light)', color: '#F4EFE4' },
+    { media: '(prefers-color-scheme: dark)', color: 'rgb(var(--ink-800))' },
+    { media: '(prefers-color-scheme: light)', color: '#F2EBDD' },
   ],
   colorScheme: 'dark light',
 }
@@ -49,13 +50,20 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <script dangerouslySetInnerHTML={{ __html: themeScript }} />
       </head>
       <body>
-        <a
-          href="#main"
-          className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[100] focus:rounded-[3px] focus:bg-lime focus:px-4 focus:py-2 focus:text-[13px] focus:font-medium focus:text-ink-900"
-        >
-          Skip to content
-        </a>
-        {children}
+        {/*
+          The theme lives at the root, not inside the landing page, so a reader
+          who switches to the parchment theme and then signs in stays in it.
+          Landing and product are one system or they are two products.
+        */}
+        <ThemeProvider>
+          <a
+            href="#main"
+            className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[100] focus:rounded-[3px] focus:bg-action focus:px-4 focus:py-2 focus:text-[13px] focus:font-medium focus:text-action-ink"
+          >
+            Skip to content
+          </a>
+          {children}
+        </ThemeProvider>
       </body>
     </html>
   )

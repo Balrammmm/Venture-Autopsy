@@ -2,6 +2,7 @@ import { z } from 'zod'
 import { db } from '@/lib/db'
 import { requireVenture } from '@/lib/auth'
 import { handle, ok, parseData } from '@/lib/api'
+import { readJson } from '@/lib/limits'
 import type { SectionKey } from '@/lib/atlas-types'
 
 const Patch = z.object({
@@ -49,7 +50,7 @@ export async function PATCH(req: Request, ctx: { params: Promise<{ id: string }>
   try {
     const { id } = await ctx.params
     await requireVenture(id)
-    const body = Patch.parse(await req.json())
+    const body = Patch.parse(await readJson(req))
 
     const venture = await db.venture.update({ where: { id }, data: body })
     // A rewritten idea is a new input, not an overwrite of history.

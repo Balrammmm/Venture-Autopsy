@@ -108,12 +108,12 @@ export default function SettingsPage() {
               <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-2">
                 <span
                   className={`inline-flex items-center gap-2 rounded-full border px-3 py-1 font-mono text-[10.5px] uppercase tracking-[0.14em] ${
-                    data.gemini.configured ? 'border-lime/45 text-lime' : 'border-ember/50 text-ember'
+                    data.gemini.configured ? 'border-action/45 text-action-text' : 'border-risk/50 text-risk'
                   }`}
                 >
                   <span
                     aria-hidden="true"
-                    className={`h-1.5 w-1.5 rounded-full ${data.gemini.configured ? 'bg-lime' : 'bg-ember'}`}
+                    className={`h-1.5 w-1.5 rounded-full ${data.gemini.configured ? 'bg-action' : 'bg-risk'}`}
                   />
                   {data.gemini.configured ? 'Key configured' : 'No key configured'}
                 </span>
@@ -126,9 +126,9 @@ export default function SettingsPage() {
               </div>
 
               {!data.gemini.configured ? (
-                <div className="mt-5 border-l-2 border-ember bg-ember-wash px-4 py-4">
+                <div className="mt-5 border-l-2 border-risk bg-risk-wash px-4 py-4">
                   <p className="flex items-center gap-2 text-[14px] text-paper">
-                    <IconKey size={14} className="text-ember" />
+                    <IconKey size={14} className="text-risk" />
                     The server has no Gemini key, so analysis and Milo are unavailable.
                   </p>
                   <ol className="mt-3 space-y-2">
@@ -204,7 +204,7 @@ export default function SettingsPage() {
                   {saving ? 'Saving' : 'Save profile'}
                 </Button>
                 {saved && (
-                  <span role="status" className="text-[13px] text-lime">
+                  <span role="status" className="text-[13px] text-action-text">
                     Saved.
                   </span>
                 )}

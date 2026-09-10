@@ -20,14 +20,26 @@ export interface VentureSummary {
   _count?: { assumptions: number; experiments: number; sources: number }
 }
 
+/** How far through the venture lifecycle a stage sits. Drives the outer ring. */
+const STAGE_PROGRESS: Record<string, number> = {
+  captured: 0.12,
+  analysing: 0.3,
+  analysed: 0.55,
+  validating: 0.8,
+  ready: 1,
+}
+
 /**
  * Each venture is drawn as a specimen plate rather than a table row: a seeded
- * sigil whose density reflects the health score, so the library reads at a
- * glance and no two ventures look alike.
+ * sigil whose density reflects the health score and whose outer arc tracks the
+ * lifecycle, so the library reads at a glance and no two ventures look alike.
  */
-function Sigil({ id, score, accent }: { id: string; score: number; accent: string }) {
+function Sigil({ id, score, accent, stage }: { id: string; score: number; accent: string; stage: string }) {
   const seed = Array.from(id).reduce((a, c) => (a * 31 + c.charCodeAt(0)) % 100000, 7)
-  const color = accent === 'ember' ? '#FF5A1F' : '#C8FB2E'
+  const color = accent === 'ember' ? 'rgb(var(--risk))' : 'rgb(var(--action-text))'
+  const progress = STAGE_PROGRESS[stage] ?? 0.12
+  // Outer ring circumference, for the stroke-dash progress arc.
+  const C = 2 * Math.PI * 66
 
   const rings = 3
   const bars: { a: number; r: number; len: number; ring: number }[] = []
@@ -50,6 +62,20 @@ function Sigil({ id, score, accent }: { id: string; score: number; accent: strin
   return (
     <svg viewBox="0 0 140 140" className="h-full w-full" aria-hidden="true">
       <circle cx="70" cy="70" r="66" fill="none" stroke="var(--rule)" strokeWidth="1" />
+      {/* Lifecycle progress: captured → analysed → validating → ready. */}
+      <circle
+        cx="70"
+        cy="70"
+        r="66"
+        fill="none"
+        stroke={color}
+        strokeWidth="2.5"
+        strokeLinecap="round"
+        strokeDasharray={`${(C * progress).toFixed(1)} ${C.toFixed(1)}`}
+        transform="rotate(-90 70 70)"
+        opacity="0.9"
+        className="transition-[stroke-dasharray] duration-700 ease-out"
+      />
       <circle cx="70" cy="70" r="52" fill="none" stroke="var(--rule)" strokeWidth="1" strokeDasharray="1 7" />
       {bars.map((b, i) => {
         const x1 = 70 + Math.cos(b.a) * b.r
@@ -78,7 +104,7 @@ function Sigil({ id, score, accent }: { id: string; score: number; accent: strin
         fontSize="10"
         fontWeight="700"
         fontFamily="var(--font-mono), monospace"
-        fill="#080A07"
+        fill="rgb(var(--action-ink))"
       >
         {score}
       </text>
@@ -87,8 +113,8 @@ function Sigil({ id, score, accent }: { id: string; score: number; accent: strin
 }
 
 const VERDICT_TONE: Record<string, string> = {
-  'High Risk': 'text-ember',
-  Promising: 'text-lime',
+  'High Risk': 'text-risk',
+  Promising: 'text-action-text',
   'Needs Validation': 'text-paper-dim',
 }
 
@@ -145,16 +171,16 @@ export function VentureCard({
       >
         <Link
           href={`/venture/${venture.id}`}
-          className="block rounded-[3px] border border-[rgba(243,238,226,0.12)] bg-[rgba(243,238,226,0.02)] p-5 transition-colors duration-200 ease-out hover:border-[rgba(243,238,226,0.32)]"
-          style={{ boxShadow: '0 20px 50px -30px rgba(0,0,0,0.95)' }}
+          className="block rounded-[3px] border border-[rgb(var(--paper)/0.12)] bg-[rgb(var(--paper)/0.02)] p-5 transition-colors duration-200 ease-out hover:border-[rgb(var(--paper)/0.32)]"
+          style={{ boxShadow: 'var(--shadow-lift)' }}
         >
           <div className="flex items-start gap-5">
             <div className="w-[76px] shrink-0 md:w-[92px]">
-              <Sigil id={venture.id} score={venture.healthScore} accent={venture.accent} />
+              <Sigil id={venture.id} score={venture.healthScore} accent={venture.accent} stage={venture.stage} />
             </div>
 
             <div className="min-w-0 flex-1">
-              <p className="display text-[1.35rem] leading-[1.14] text-paper transition-colors duration-150 group-hover:text-lime">
+              <p className="display text-[1.35rem] leading-[1.14] text-paper transition-colors duration-150 group-hover:text-action-text">
                 {venture.title}
               </p>
               <p className="mt-1.5 line-clamp-2 max-w-measure text-[13px] leading-[1.55] text-paper-faint">
@@ -172,7 +198,7 @@ export function VentureCard({
                     <span className="num text-paper-sub">{venture._count.assumptions} assumptions</span>
                     <span className="num text-paper-sub">{venture._count.experiments} experiments</span>
                     {venture._count.sources > 0 && (
-                      <span className="num text-lime">{venture._count.sources} sources</span>
+                      <span className="num text-action-text">{venture._count.sources} sources</span>
                     )}
                   </>
                 )}
@@ -183,7 +209,12 @@ export function VentureCard({
         </Link>
 
         {/* Row actions sit outside the link so they never fight it for the click. */}
-        <div className="no-print absolute right-3 top-3 flex items-center gap-1 opacity-0 transition-opacity duration-150 focus-within:opacity-100 group-hover:opacity-100">
+        {/*
+          Always present on touch, where there is no hover to reveal them, and
+          revealed on hover or focus on a fine pointer. Hiding destructive
+          actions behind a hover state makes them unreachable on a phone.
+        */}
+        <div className="no-print absolute right-3 top-3 flex items-center gap-1 transition-opacity duration-150 focus-within:opacity-100 group-hover:opacity-100 [@media(hover:hover)]:opacity-0">
           {confirming ? (
             <>
               <Button variant="danger" size="sm" onClick={() => act(() => onDelete(venture.id))} disabled={busy}>

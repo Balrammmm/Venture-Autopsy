@@ -29,8 +29,8 @@ const KINDS = ['interview', 'fake_door', 'landing_page', 'concierge', 'survey', 
 const STATUS_TONE: Record<string, string> = {
   planned: 'text-paper-faint',
   running: 'text-paper',
-  passed: 'text-lime',
-  failed: 'text-ember',
+  passed: 'text-action-text',
+  failed: 'text-risk',
   inconclusive: 'text-paper-dim',
 }
 
@@ -40,7 +40,7 @@ const FILL: Record<string, number> = { planned: 0.12, running: 0.55, passed: 1, 
 function Tube({ status, kind }: { status: string; kind: string }) {
   const reduce = useReducedMotion()
   const fill = FILL[status] ?? 0.1
-  const color = status === 'failed' ? '#FF5A1F' : status === 'passed' ? '#C8FB2E' : '#C8FB2E'
+  const color = status === 'failed' ? 'rgb(var(--risk))' : status === 'passed' ? 'rgb(var(--action-text))' : 'rgb(var(--action-text))'
   const h = 96 * fill
 
   return (
@@ -50,11 +50,11 @@ function Tube({ status, kind }: { status: string; kind: string }) {
           <path d="M13 10h18v78a9 9 0 0 1-18 0V10Z" />
         </clipPath>
       </defs>
-      <path d="M10 6h24" stroke="rgba(243,238,226,0.42)" strokeWidth="2" strokeLinecap="round" />
+      <path d="M10 6h24" stroke="rgb(var(--paper)/0.42)" strokeWidth="2" strokeLinecap="round" />
       <path
         d="M13 10h18v78a9 9 0 0 1-18 0V10Z"
-        fill="rgba(243,238,226,0.03)"
-        stroke="rgba(243,238,226,0.3)"
+        fill="rgb(var(--paper)/0.03)"
+        stroke="rgb(var(--paper)/0.3)"
         strokeWidth="1.2"
       />
       <g clipPath={`url(#tube-${kind}-${status})`}>
@@ -68,13 +68,13 @@ function Tube({ status, kind }: { status: string; kind: string }) {
           fillOpacity={status === 'planned' ? 0.25 : 0.55}
         />
         {status === 'failed' && (
-          <path d="M13 46 L31 62 M31 46 L13 62" stroke="#FF5A1F" strokeWidth="1.6" opacity="0.9" />
+          <path d="M13 46 L31 62 M31 46 L13 62" stroke="rgb(var(--risk))" strokeWidth="1.6" opacity="0.9" />
         )}
       </g>
       {[30, 50, 70, 90].map((y) => (
-        <line key={y} x1="26" y1={y} x2="31" y2={y} stroke="rgba(243,238,226,0.28)" strokeWidth="1" />
+        <line key={y} x1="26" y1={y} x2="31" y2={y} stroke="rgb(var(--paper)/0.28)" strokeWidth="1" />
       ))}
-      {status === 'passed' && <path d="M16 100 l4 4 8-9" stroke="#0C0E0B" strokeWidth="2.4" fill="none" strokeLinecap="round" />}
+      {status === 'passed' && <path d="M16 100 l4 4 8-9" stroke="rgb(var(--ink-800))" strokeWidth="2.4" fill="none" strokeLinecap="round" />}
     </svg>
   )
 }
@@ -146,7 +146,7 @@ function ValidatePage({ id }: { id: string }) {
           </div>
           <div className="flex flex-wrap items-center gap-2">
             <span className="num font-mono text-[10.5px] uppercase tracking-[0.14em] text-paper-sub">
-              <span className="text-lime">{passed}</span> passed · <span className="text-ember">{failed}</span> failed ·{' '}
+              <span className="text-action-text">{passed}</span> passed · <span className="text-risk">{failed}</span> failed ·{' '}
               {experiments.length} total
             </span>
             <Button variant="primary" size="sm" onClick={() => setAdding((a) => !a)} className="no-print">
@@ -168,7 +168,7 @@ function ValidatePage({ id }: { id: string }) {
         </div>
 
         {adding && (
-          <div className="mb-10 rounded-[3px] border border-[rgba(243,238,226,0.14)] p-5">
+          <div className="mb-10 rounded-[3px] border border-[rgb(var(--paper)/0.14)] p-5">
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
               <div>
                 <label htmlFor="new-exp-name" className="label mb-1.5 block">
@@ -243,7 +243,7 @@ function ValidatePage({ id }: { id: string }) {
               return (
                 <article
                   key={e.id}
-                  className="rounded-[3px] border border-[rgba(243,238,226,0.12)] bg-[rgba(243,238,226,0.02)] p-5"
+                  className="rounded-[3px] border border-[rgb(var(--paper)/0.12)] bg-[rgb(var(--paper)/0.02)] p-5"
                 >
                   <div className="flex flex-col gap-5 md:flex-row">
                     <Tube status={e.status} kind={e.kind} />
@@ -263,7 +263,7 @@ function ValidatePage({ id }: { id: string }) {
                       <p className="mt-2.5 max-w-measure text-[14px] leading-[1.62] text-paper-dim">{e.hypothesis}</p>
 
                       {assumption && (
-                        <div className="mt-3 flex flex-wrap items-center gap-3 border-l-2 border-[rgba(243,238,226,0.2)] pl-3.5">
+                        <div className="mt-3 flex flex-wrap items-center gap-3 border-l-2 border-[rgb(var(--paper)/0.2)] pl-3.5">
                           <p className="max-w-measure text-[12.5px] leading-[1.5] text-paper-faint">
                             Tests: {assumption.claim}
                           </p>
@@ -284,7 +284,7 @@ function ValidatePage({ id }: { id: string }) {
                           <ol className="space-y-1.5">
                             {e.script.map((q, i) => (
                               <li key={i} className="flex gap-3 text-[13.5px] leading-[1.55] text-paper-dim">
-                                <span aria-hidden="true" className="num mt-[2px] shrink-0 font-mono text-[10.5px] text-lime">
+                                <span aria-hidden="true" className="num mt-[2px] shrink-0 font-mono text-[10.5px] text-action-text">
                                   {String(i + 1).padStart(2, '0')}
                                 </span>
                                 {q}
@@ -295,12 +295,12 @@ function ValidatePage({ id }: { id: string }) {
                       )}
 
                       <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
-                        <div className="border-l-2 border-lime pl-3.5">
-                          <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-lime">Passes if</p>
+                        <div className="border-l-2 border-action pl-3.5">
+                          <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-action-text">Passes if</p>
                           <p className="mt-1 text-[13px] leading-[1.55] text-paper-dim">{e.successThreshold}</p>
                         </div>
-                        <div className="border-l-2 border-ember pl-3.5">
-                          <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-ember">Fails if</p>
+                        <div className="border-l-2 border-risk pl-3.5">
+                          <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-risk">Fails if</p>
                           <p className="mt-1 text-[13px] leading-[1.55] text-paper-dim">{e.failThreshold}</p>
                         </div>
                       </div>
@@ -359,7 +359,7 @@ function ValidatePage({ id }: { id: string }) {
                         </div>
                       ) : (
                         e.result && (
-                          <div className="mt-5 rounded-[3px] border border-[rgba(243,238,226,0.12)] p-4">
+                          <div className="mt-5 rounded-[3px] border border-[rgb(var(--paper)/0.12)] p-4">
                             <p className="label mb-1.5">Result</p>
                             <p className="max-w-measure whitespace-pre-wrap text-[13.5px] leading-[1.6] text-paper-dim">
                               {e.result}
@@ -369,7 +369,7 @@ function ValidatePage({ id }: { id: string }) {
                                 href={e.evidenceUrl}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="mt-2 inline-block break-all text-[12.5px] text-lime underline decoration-lime/40"
+                                className="mt-2 inline-block break-all text-[12.5px] text-action-text underline decoration-action/40"
                               >
                                 {e.evidenceUrl}
                               </a>

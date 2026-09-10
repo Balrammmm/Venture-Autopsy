@@ -70,8 +70,10 @@ function CameraRig({ scroll }: { scroll: React.MutableRefObject<ReturnType<typeo
       }
       case 'resolution': {
         const t = s.act.resolution
-        dist = 7.6 - t * 1.1
-        y = 0.15
+        // Closer than the other acts: the monument is the last thing the page
+        // says, and it has to fill the frame rather than sit in it.
+        dist = 6.1 - t * 1.15
+        y = 0.1
         break
       }
     }
