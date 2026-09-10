@@ -9,6 +9,7 @@ import { Act, Z } from './layout/Stage'
 import { LandingStage } from './LandingStage'
 import { AnalysisLens, HoverReadout, ProgressRail, ThemeToggle } from './ui/LandingChrome'
 import { InlineCta, PrimaryCta, SecondaryCta } from './ui/Cta'
+import { LegalMenu } from './ui/LegalMenu'
 import { BrandMark } from '@/components/brand/BrandMark'
 import { KineticLine, KineticResolve, KineticSlide } from './KineticType'
 import { ATLAS_MODULES, type AtlasModule } from './canvas/scenes/Atlas'
@@ -429,52 +430,20 @@ function LandingInner() {
             <SecondaryCta onClick={() => router.push('/onboarding?demo=1')}>See a worked example</SecondaryCta>
           </div>
 
+          {/*
+            The page signs off here, inside the last act, so the finished
+            system stays on screen behind it. There is no separate footer to
+            scroll into, and therefore no dead space after the ending.
+          */}
+          <p className="mt-10 flex items-center gap-3 font-mono text-[10px] uppercase tracking-[0.24em] text-paper-sub">
+            <span aria-hidden="true" className="h-px w-8 bg-[color:var(--rule-strong)]" />
+            One idea at a time
+          </p>
         </Act>
       </main>
 
-      {/* ------------------------------------------------------ Footer */}
-      {/*
-        The last act needs a clear viewport to release into before the closing
-        panel arrives. Without it the released copy ends its life pinned under
-        the header. The gap is transparent, so the finished monument holds the
-        screen alone for a beat.
-      */}
-      <div aria-hidden="true" className="pointer-events-none h-[85vh]" />
+      <LegalMenu />
 
-      <footer
-        className="relative border-t border-[color:var(--rule)] bg-ink-900"
-        style={{ zIndex: Z.content }}
-      >
-        <div className="mx-auto grid max-w-[1600px] grid-cols-1 gap-8 px-5 py-14 md:grid-cols-[minmax(0,1fr)_auto] md:px-8">
-          <div>
-            <BrandMark href={null} />
-            <p className="mt-4 max-w-[46ch] text-[13px] leading-[1.7] text-paper-faint">
-              A validation lab for one idea at a time.
-            </p>
-          </div>
-          <nav className="flex flex-wrap items-end gap-x-7 gap-y-3 md:justify-end" aria-label="Footer">
-            {[
-              ['Privacy', '/privacy'],
-              ['Terms', '/terms'],
-              ['Contact', '/contact'],
-              ['GitHub', 'https://github.com/Balrammmm/Venture-Autopsy'],
-            ].map(([label, href]) => (
-              <Link
-                key={href}
-                href={href}
-                {...(href.startsWith('http') ? { target: '_blank', rel: 'noreferrer noopener' } : {})}
-                className="tap group relative inline-flex items-center text-[13px] text-paper-dim transition-colors duration-150 hover:text-action-text"
-              >
-                {label}
-                <span
-                  aria-hidden="true"
-                  className="absolute -bottom-1 left-0 h-px w-full origin-left scale-x-0 bg-action transition-transform duration-300 ease-out group-hover:scale-x-100"
-                />
-              </Link>
-            ))}
-          </nav>
-        </div>
-      </footer>
 
       <HoverReadout
         title={hoveredModule?.name ?? hovered?.title ?? null}

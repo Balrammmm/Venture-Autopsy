@@ -56,6 +56,22 @@ function OnboardingInner() {
     setStrengths((prev) => (prev.includes(s) ? prev.filter((x) => x !== s) : [...prev, s]))
   }
 
+  /*
+    The answers, translated into the specimen's physiology. Every question the
+    founder answers changes something visible: who they are seats a marker,
+    what they are good at adds tool modules, capital sets the scale of frame
+    they can afford, time sets the pace it all runs at, and risk appetite
+    decides how far the route forks.
+  */
+  const seedProfile = {
+    named: name.trim().length > 1,
+    strengths: strengths.length,
+    capital: Math.max(0, CAPITAL.indexOf(capital)) / (CAPITAL.length - 1),
+    pace: Math.max(0, TIMEFRAME.indexOf(timeframe)) / (TIMEFRAME.length - 1),
+    branch: Math.max(0, RISK.indexOf(risk)) / (RISK.length - 1),
+    hasIdea: idea.trim().length >= 40,
+  }
+
   function next() {
     setFieldError(null)
     if (step === 0) {
@@ -338,14 +354,36 @@ function OnboardingInner() {
 
         <aside className="hidden lg:block">
           <div className="sticky top-16">
-            <SeedStage step={step} charge={charge} />
-            <p aria-hidden="true" className="mt-4 font-mono text-[10px] uppercase tracking-[0.22em] text-paper-faint">
-              {step === 0 ? 'Specimen · dormant' : step === 1 ? 'Specimen · waking' : 'Specimen · open'}
-            </p>
-            <p className="mt-3 max-w-[36ch] text-[12.5px] leading-relaxed text-paper-faint">
-              Nothing here is researched unless you say so. Everything the analysis produces from your description
-              alone is labelled a hypothesis — written to be tested, not believed.
-            </p>
+            <SeedStage step={step} charge={charge} profile={seedProfile} />
+            {/*
+              A live readout of what the answers have actually built, so the
+              object is legible as a response rather than as an ornament.
+            */}
+            <div aria-live="polite" className="mt-5 space-y-2">
+              <p className="font-mono text-[10px] uppercase tracking-[0.22em] text-action-text">
+                {seedProfile.hasIdea
+                  ? 'Specimen · unfolding'
+                  : step === 0
+                    ? 'Specimen · dormant'
+                    : step === 1
+                      ? 'Specimen · calibrating'
+                      : 'Specimen · open'}
+              </p>
+              <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-1.5 text-[11.5px]">
+                {[
+                  ['Founder', seedProfile.named ? 'marker seated' : 'awaiting'],
+                  ['Modules', seedProfile.strengths ? `${seedProfile.strengths} fitted` : 'none fitted'],
+                  ['Frame', capital || 'unset'],
+                  ['Pace', timeframe || 'unset'],
+                  ['Route', risk ? `${seedProfile.branch > 0.5 ? 3 : seedProfile.branch > 0 ? 2 : 1} branch${seedProfile.branch > 0 ? 'es' : ''}` : 'single'],
+                ].map(([k, v]) => (
+                  <div key={k} className="contents">
+                    <dt className="font-mono uppercase tracking-[0.14em] text-paper-sub">{k}</dt>
+                    <dd className="truncate text-paper-dim">{v}</dd>
+                  </div>
+                ))}
+              </dl>
+            </div>
           </div>
         </aside>
       </main>

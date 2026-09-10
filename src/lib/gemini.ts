@@ -306,6 +306,14 @@ export const MILO_ACTIONS = {
     'Summarise the research gathered for this venture. Separate what a real source actually supports from what is still assumption, name the single biggest unknown, and say what to go and find next.',
   launch:
     'Build a launch plan to first paying customer. Milestones with owners and dates, the one gate that must pass before each, and what gets cut first if time runs short.',
+  biggestrisk:
+    'Name the single biggest risk to this venture right now, not a list. Say what it would cost if it is real, the earliest signal that would reveal it, and what to do this week about it.',
+  competitors:
+    'Work only from the evidence supplied for this venture. Who is already serving this customer according to that evidence, what does it actually establish, and where are the gaps you cannot fill without more research? Name nothing you were not given.',
+  score:
+    'Explain the current readiness score in plain language: what is pulling it up, what is holding it down, and the one change that would move it most. Be specific about which assumption or evidence gap is responsible.',
+  summarise:
+    'Summarise this venture in under 120 words for someone who has never heard of it: the customer, the wedge, the state of the evidence, and the single open question. No hype.',
 } as const
 
 export type MiloAction = keyof typeof MILO_ACTIONS

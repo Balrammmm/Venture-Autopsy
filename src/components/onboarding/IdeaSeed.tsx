@@ -20,13 +20,39 @@ import { useScenePalette } from '@/components/landing/theme/ThemeProvider'
  * thing being created here is recognisably the thing the landing page promised.
  */
 
-function Seed({ step, charge }: { step: number; charge: React.MutableRefObject<number> }) {
+export interface SeedProfile {
+  /** A founder marker appears once they are named. */
+  named: boolean
+  /** One tool module per strength. */
+  strengths: number
+  /** Capital sets the scale of the frame it can afford to build. */
+  capital: number
+  /** Time sets the pace everything runs at. */
+  pace: number
+  /** Risk appetite sets how far the route branches. */
+  branch: number
+  /** The idea itself opens the shell. */
+  hasIdea: boolean
+}
+
+function Seed({
+  step,
+  charge,
+  profile,
+}: {
+  step: number
+  charge: React.MutableRefObject<number>
+  profile: SeedProfile
+}) {
   const p = useScenePalette()
   const root = useRef<THREE.Group>(null)
   const panels = useRef<(THREE.Group | null)[]>([])
   const core = useRef<THREE.Mesh>(null)
   const sheet = useRef<THREE.Group>(null)
   const rings = useRef<THREE.Group>(null)
+  const marker = useRef<THREE.Group>(null)
+  const toolRefs = useRef<(THREE.Group | null)[]>([])
+  const branchRefs = useRef<(THREE.Group | null)[]>([])
   // Eased, so a step change glides rather than snapping.
   const open = useRef(0)
 
@@ -48,13 +74,20 @@ function Seed({ step, charge }: { step: number; charge: React.MutableRefObject<n
     const t = st.clock.elapsedTime
     const dt = Math.min(delta, 0.05)
 
-    // Target opening: 0 dormant, 0.45 waking, 1 open.
-    const target = step >= 2 ? 1 : step === 1 ? 0.45 : 0
+    // Opening: the shell parts at step two and swings wide once the idea is
+    // actually being written, not merely when the step is reached.
+    const target = profile.hasIdea ? 1 : step >= 2 ? 0.68 : step === 1 ? 0.45 : 0
     open.current += (target - open.current) * Math.min(dt * 3.2, 1)
     const o = open.current
 
-    g.rotation.y += dt * (0.16 - o * 0.1)
-    g.rotation.x = Math.sin(t * 0.4) * 0.05 * (1 - o * 0.6)
+    // Time availability sets the pace of the whole system.
+    const pace = 0.55 + profile.pace * 0.9
+    // Capital sets how large a frame the venture can afford.
+    const scale = 0.82 + profile.capital * 0.3
+    g.scale.setScalar(scale + Math.sin(t * 0.5) * 0.004)
+
+    g.rotation.y += dt * (0.16 - o * 0.1) * pace
+    g.rotation.x = Math.sin(t * 0.4 * pace) * 0.05 * (1 - o * 0.6)
 
     panels.current.forEach((el, i) => {
       if (!el) return
@@ -88,9 +121,44 @@ function Seed({ step, charge }: { step: number; charge: React.MutableRefObject<n
 
     if (rings.current) {
       rings.current.visible = o > 0.06
-      rings.current.rotation.z = t * 0.1
+      rings.current.rotation.z = t * 0.1 * pace
       rings.current.scale.setScalar(0.8 + o * 0.5)
     }
+
+    // The founder marker: a stamp that seats itself once they are named.
+    if (marker.current) {
+      const on = profile.named ? 1 : 0
+      const m = marker.current
+      m.visible = on > 0
+      const k = Math.min(dt * 4, 1)
+      m.scale.setScalar(m.scale.x + (on * 0.13 - m.scale.x) * k)
+      m.position.y = -0.98 + Math.sin(t * 0.9 * pace) * 0.012
+      m.rotation.y = t * 0.3 * pace
+    }
+
+    // One tool module per declared strength, seating in turn.
+    toolRefs.current.forEach((el, i) => {
+      if (!el) return
+      const has = i < profile.strengths
+      const a = (i / 8) * Math.PI * 2
+      const R = 1.02
+      const k = Math.min(dt * 3.4, 1)
+      const want = has ? 1 : 0
+      el.scale.setScalar(el.scale.x + (want * 0.1 - el.scale.x) * k)
+      el.position.set(Math.cos(a) * R, -0.72 + Math.sin(t * pace + i) * 0.02, Math.sin(a) * R)
+      el.rotation.y = -a + t * 0.2 * pace
+    })
+
+    // Risk appetite: how far the route branches beyond the single safe line.
+    branchRefs.current.forEach((el, i) => {
+      if (!el) return
+      // Branch 0 is always there. 1 and 2 appear as appetite rises.
+      const want = i === 0 ? 1 : profile.branch > i / 3 ? 1 : 0
+      const k = Math.min(dt * 3, 1)
+      const s = el.scale.y + (want - el.scale.y) * k
+      el.scale.set(1, s, 1)
+      el.rotation.z = (i - 1) * (0.15 + profile.branch * 0.4)
+    })
   })
 
   return (
@@ -135,6 +203,54 @@ function Seed({ step, charge }: { step: number; charge: React.MutableRefObject<n
         />
       </mesh>
 
+      {/* The founder marker — an identity stamp seated under the capsule. */}
+      <group ref={marker} position={[0, -0.98, 0]} scale={0.001} visible={false}>
+        <mesh rotation={[Math.PI / 2, 0, 0]}>
+          <cylinderGeometry args={[1, 1, 0.28, 6]} />
+          <meshStandardMaterial color={p.action} emissive={p.action} emissiveIntensity={0.4} roughness={0.35} metalness={0.5} />
+          <Edges threshold={15} color={p.paper} />
+        </mesh>
+      </group>
+
+      {/* One tool module per strength. */}
+      {Array.from({ length: 8 }, (_, i) => (
+        <group
+          key={`tool${i}`}
+          ref={(el) => {
+            toolRefs.current[i] = el
+          }}
+          scale={0.001}
+        >
+          <mesh>
+            <boxGeometry args={[1, 1, 1]} />
+            <meshStandardMaterial color={p.intel} emissive={p.intel} emissiveIntensity={0.25} roughness={0.4} metalness={0.4} />
+            <Edges threshold={15} color={p.intel} />
+          </mesh>
+        </group>
+      ))}
+
+      {/* Route branches — how far the plan forks. */}
+      <group position={[0, 0.92, 0]}>
+        {[0, 1, 2].map((i) => (
+          <group
+            key={`br${i}`}
+            ref={(el) => {
+              branchRefs.current[i] = el
+            }}
+            scale={[1, i === 0 ? 1 : 0.001, 1]}
+          >
+            <mesh position={[0, 0.3, 0]}>
+              <cylinderGeometry args={[0.008, 0.008, 0.6, 5]} />
+              <meshBasicMaterial color={i === 0 ? p.signal : p.unknown} transparent opacity={0.7} />
+            </mesh>
+            <mesh position={[0, 0.62, 0]}>
+              <sphereGeometry args={[0.026, 8, 8]} />
+              <meshBasicMaterial color={i === 0 ? p.signal : p.unknown} />
+            </mesh>
+          </group>
+        ))}
+      </group>
+
       {/* The blueprint that rises once the idea itself is being written. */}
       <group ref={sheet} visible={false}>
         <mesh material={shell}>
@@ -152,7 +268,15 @@ function Seed({ step, charge }: { step: number; charge: React.MutableRefObject<n
   )
 }
 
-export function IdeaSeed({ step, charge }: { step: number; charge: React.MutableRefObject<number> }) {
+export function IdeaSeed({
+  step,
+  charge,
+  profile,
+}: {
+  step: number
+  charge: React.MutableRefObject<number>
+  profile: SeedProfile
+}) {
   const p = useScenePalette()
   return (
     <Canvas
@@ -169,7 +293,7 @@ export function IdeaSeed({ step, charge }: { step: number; charge: React.Mutable
       <directionalLight position={[-4, -1, -3]} intensity={p.fillIntensity} color={p.fillLight} />
       <pointLight position={[0, 0, 1.6]} intensity={6} distance={7} color={p.action} />
       <Suspense fallback={null}>
-        <Seed step={step} charge={charge} />
+        <Seed step={step} charge={charge} profile={profile} />
       </Suspense>
     </Canvas>
   )

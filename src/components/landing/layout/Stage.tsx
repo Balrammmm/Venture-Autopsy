@@ -193,8 +193,15 @@ export function Act({
             }`}
             style={{ paddingTop: LAYOUT.headerH }}
           >
+            {/*
+              The bottom strip belongs to the child, not the scroll container:
+              a scroll container's bottom padding is not counted in
+              `scrollHeight`, so tall copy spills straight through it. Carried
+              here, the reserve survives whether the copy fits or overflows, and
+              keeps text clear of the fixed chrome in the bottom corners.
+            */}
             <div
-              className={`my-auto w-full shrink-0 ${
+              className={`my-auto w-full shrink-0 pb-16 lg:pb-0 ${
                 side === 'center' ? 'max-w-[42rem] text-center' : 'max-w-[34rem]'
               }`}
             >

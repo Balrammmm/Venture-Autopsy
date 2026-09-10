@@ -10,96 +10,123 @@ import type { ScrollState } from '../../scroll/ScrollDirector'
 import type { PointerState } from '../LandingCanvas'
 
 /**
- * The venture, assembled.
+ * The venture architecture.
  *
- * Not an abstract sculpture: an architecture. Everything the page has handled
- * returns and locks into a standing structure — a plinth of evidence, tiers of
- * blueprint plates held apart by metal joints, a glass core where the
- * load-bearing assumption used to break, and illuminated nodes at each
- * junction. It settles once, with a slight overshoot, and then holds still.
+ * Everything the page has handled arrives here and becomes a working part of
+ * one machine. Nothing in this scene is decoration — each element is the thing
+ * an earlier act was about:
+ *
+ *   foundation   the customer evidence from Fieldwork, laid as a bed of plates
+ *                with one lit node per piece of evidence.
+ *   struts       the assumption shards from Evidence, now load-bearing. The
+ *                validated ones are solid metal; the unverified ones are still
+ *                glass, and you can see through them.
+ *   modules      the nine Atlas instruments, arrived and seated in a ring,
+ *                each still doing its small job.
+ *   paths        the research signals, running between modules as value flow.
+ *   crown        the venture itself, which only lights once the flows reach it.
+ *
+ * It assembles bottom-up while the camera pulls back, then holds a living idle:
+ * beads of value keep moving through the paths so the ending breathes rather
+ * than stopping dead.
  */
 
-interface Tier {
-  y: number
+const MODULES = 9
+
+interface Strut {
+  angle: number
+  /** Unverified struts stay glass; verified ones become metal. */
+  verified: boolean
+  lean: number
+  delay: number
+}
+
+function buildStruts(): Strut[] {
+  const r = rng(9931)
+  return Array.from({ length: 12 }, (_, i) => ({
+    angle: (i / 12) * Math.PI * 2 + r() * 0.1,
+    // Two thirds hold; a third are still assumptions you have not tested.
+    verified: r() > 0.34,
+    lean: (r() - 0.5) * 0.16,
+    delay: i * 0.022,
+  }))
+}
+
+/** One piece of customer evidence in the foundation bed. */
+interface Plate {
+  x: number
+  z: number
+  rot: number
   w: number
   d: number
-  /** Where the plate comes in from before it locks. */
-  from: THREE.Vector3
-  fromRot: THREE.Euler
   delay: number
-  tone: 'paper' | 'glass' | 'metal'
 }
 
-function buildTiers(): Tier[] {
-  const r = rng(24601)
-  const COUNT = 7
-  return Array.from({ length: COUNT }, (_, i) => {
-    const k = i / (COUNT - 1)
-    // Tapering upward, so it reads as a built thing rather than a stack.
-    const w = 1.9 - k * 0.95
-    return {
-      y: -1.0 + i * 0.32,
-      w,
-      d: w * 0.62,
-      from: new THREE.Vector3((r() - 0.5) * 11, (r() - 0.5) * 7 + 1.5, -6 - r() * 7),
-      fromRot: new THREE.Euler(r() * 5, r() * 5, r() * 4),
-      delay: 0.06 * i,
-      tone: i === 3 ? 'glass' : i % 3 === 1 ? 'metal' : 'paper',
+function buildPlates(): Plate[] {
+  const r = rng(4477)
+  const out: Plate[] = []
+  for (let ring = 0; ring < 3; ring++) {
+    const count = 6 + ring * 5
+    const radius = 0.5 + ring * 0.62
+    for (let i = 0; i < count; i++) {
+      const a = (i / count) * Math.PI * 2 + ring * 0.4
+      out.push({
+        x: Math.cos(a) * radius,
+        z: Math.sin(a) * radius,
+        rot: a + Math.PI / 2 + (r() - 0.5) * 0.3,
+        w: 0.3 + r() * 0.16,
+        d: 0.2 + r() * 0.12,
+        delay: ring * 0.05 + i * 0.008,
+      })
     }
-  })
+  }
+  return out
 }
 
-/** The fine posts that hold the tiers apart. */
-function Joints({
-  kit,
-  tiers,
-  reveal,
-}: {
-  kit: Kit
-  tiers: Tier[]
-  reveal: React.MutableRefObject<number>
-}) {
-  const groups = useRef<(THREE.Group | null)[]>([])
+/* ------------------------------------------------------------------ *
+ * Value flow — beads that travel the paths between modules and up into
+ * the crown. This is the idle life of the finished object.
+ * ------------------------------------------------------------------ */
 
-  // Driven per frame, not per render: the page never re-renders while scrolling.
-  useFrame(() => {
-    groups.current.forEach((g, i) => {
-      if (!g) return
-      const on = Math.min(1, Math.max(0, reveal.current * tiers.length - (i + 1)))
-      g.scale.set(1, on, 1)
-      g.visible = on > 0.01
-    })
-  })
+function usePaths() {
+  return useMemo(() => {
+    const paths: THREE.CatmullRomCurve3[] = []
+    const R = 1.32
+    const deckY = 0.42
+    for (let i = 0; i < MODULES; i++) {
+      const a = (i / MODULES) * Math.PI * 2
+      const b = ((i + 1) / MODULES) * Math.PI * 2
+      const from = new THREE.Vector3(Math.cos(a) * R, deckY, Math.sin(a) * R)
+      const to = new THREE.Vector3(Math.cos(b) * R, deckY, Math.sin(b) * R)
+      const mid = from.clone().add(to).multiplyScalar(0.5)
+      mid.multiplyScalar(0.72)
+      mid.y = deckY + 0.1
+      paths.push(new THREE.CatmullRomCurve3([from, mid, to]))
+    }
+    // Every third module also feeds the crown, so value visibly rises.
+    for (let i = 0; i < MODULES; i += 3) {
+      const a = (i / MODULES) * Math.PI * 2
+      const from = new THREE.Vector3(Math.cos(a) * R, deckY, Math.sin(a) * R)
+      const mid = new THREE.Vector3(Math.cos(a) * R * 0.5, deckY + 0.6, Math.sin(a) * R * 0.5)
+      const to = new THREE.Vector3(0, 1.24, 0)
+      paths.push(new THREE.CatmullRomCurve3([from, mid, to]))
+    }
+    return paths
+  }, [])
+}
 
+function Paths({ kit, paths }: { kit: Kit; paths: THREE.CatmullRomCurve3[] }) {
+  const geos = useMemo(
+    () => paths.map((c) => new THREE.TubeGeometry(c, 30, 0.006, 5, false)),
+    [paths],
+  )
   return (
     <group>
-      {tiers.slice(0, -1).map((t, i) => {
-        const next = tiers[i + 1]
-        const h = next.y - t.y
-        const inset = Math.min(t.w, next.w) * 0.36
-        return (
-          <group
-            key={i}
-            ref={(el) => {
-              groups.current[i] = el
-            }}
-            position={[0, t.y + h / 2, 0]}
-            scale={[1, 0.001, 1]}
-          >
-            {[
-              [-inset, -inset * 0.62],
-              [inset, -inset * 0.62],
-              [-inset, inset * 0.62],
-              [inset, inset * 0.62],
-            ].map(([x, z], j) => (
-              <mesh key={j} position={[x, 0, z]}>
-                <cylinderGeometry args={[0.018, 0.018, h, 8]} />
-                <meshStandardMaterial color={kit.p.metal} roughness={0.35} metalness={0.85} />
-              </mesh>
-            ))}
-          </group>
-        )
-      })}
+      {geos.map((g, i) => (
+        <mesh key={i} geometry={g}>
+          <meshBasicMaterial color={i >= MODULES ? kit.p.action : kit.p.signal} transparent opacity={0.34} />
+        </mesh>
+      ))}
     </group>
   )
 }
@@ -112,16 +139,23 @@ export function Resolution({
   pointer: React.MutableRefObject<PointerState>
 }) {
   const kit = useKit()
-  const tiers = useMemo(buildTiers, [])
-  const root = useRef<THREE.Group>(null)
-  const structure = useRef<THREE.Group>(null)
-  const plateRefs = useRef<(THREE.Group | null)[]>([])
-  const nodeRefs = useRef<(THREE.Mesh | null)[]>([])
-  const pool = useRef<THREE.Mesh>(null)
-  const ringRefs = useRef<(THREE.Group | null)[]>([])
-  const revealRef = useRef(0)
+  const struts = useMemo(buildStruts, [])
+  const plates = useMemo(buildPlates, [])
+  const paths = usePaths()
 
-  const tmp = useMemo(() => new THREE.Vector3(), [])
+  const root = useRef<THREE.Group>(null)
+  const system = useRef<THREE.Group>(null)
+  const plateRefs = useRef<(THREE.Mesh | null)[]>([])
+  const evidenceNodes = useRef<THREE.InstancedMesh>(null)
+  const strutRefs = useRef<(THREE.Group | null)[]>([])
+  const moduleRefs = useRef<(THREE.Group | null)[]>([])
+  const beadRefs = useRef<(THREE.Mesh | null)[]>([])
+  const crown = useRef<THREE.Group>(null)
+  const crownGlow = useRef<THREE.Mesh>(null)
+  const pool = useRef<THREE.Mesh>(null)
+
+  const tmpObj = useMemo(() => new THREE.Object3D(), [])
+  const tmpVec = useMemo(() => new THREE.Vector3(), [])
 
   const mats = useMemo(
     () => ({
@@ -129,17 +163,33 @@ export function Resolution({
         color: kit.p.paper,
         roughness: kit.p.paperRoughness,
         metalness: kit.p.metalness,
+        transparent: true,
       }),
+      metal: new THREE.MeshStandardMaterial({ color: kit.p.metal, roughness: 0.34, metalness: 0.86 }),
       glass: new THREE.MeshStandardMaterial({
         color: kit.p.intel,
         transparent: true,
-        opacity: kit.p.glassOpacity + 0.14,
-        roughness: 0.06,
-        metalness: 0.3,
+        opacity: 0.3,
+        roughness: 0.05,
+        metalness: 0.2,
       }),
-      metal: new THREE.MeshStandardMaterial({ color: kit.p.metal, roughness: 0.4, metalness: 0.75 }),
+      deck: new THREE.MeshStandardMaterial({
+        color: kit.p.metal,
+        roughness: 0.42,
+        metalness: 0.7,
+        transparent: true,
+      }),
     }),
     [kit],
+  )
+
+  // Beads: 3 per path, evenly offset, travelling continuously.
+  const beads = useMemo(
+    () =>
+      paths.flatMap((_, pathIndex) =>
+        [0, 0.33, 0.66].map((offset) => ({ pathIndex, offset, speed: 0.13 + (pathIndex % 4) * 0.017 })),
+      ),
+    [paths],
   )
 
   useFrame((st, delta) => {
@@ -154,163 +204,235 @@ export function Resolution({
     const px = pointer.current.active ? pointer.current.x : 0
     const py = pointer.current.active ? pointer.current.y : 0
 
-    // Assemble, then a single settle with a small overshoot.
-    const assemble = ease(range(t, 0.06, 0.66))
-    const settle = ease(range(t, 0.66, 0.84))
-    revealRef.current = assemble
+    // Assembly runs bottom-up, each layer handing to the next.
+    const found = ease(range(t, 0.02, 0.3))
+    const strut = ease(range(t, 0.22, 0.55))
+    const module = ease(range(t, 0.46, 0.76))
+    const flow = ease(range(t, 0.68, 0.92))
+    const settle = ease(range(t, 0.82, 1))
 
-    if (structure.current) {
+    if (system.current) {
       const k = Math.min(delta * 2, 1)
-      // A slow quarter-turn as it builds, then it holds still and only the
+      // A slow quarter turn while it builds, then it holds and only the
       // pointer moves it.
-      const spin = (1 - settle) * 0.5 + px * 0.28
-      structure.current.rotation.y += (spin - structure.current.rotation.y) * k
-      structure.current.rotation.x += (py * 0.09 + (1 - assemble) * 0.32 - structure.current.rotation.x) * k
-      // Overshoot: rises slightly past its resting height, then drops back.
-      const overshoot = Math.sin(settle * Math.PI) * 0.08
-      structure.current.position.y = -0.25 + assemble * 0.25 + overshoot
-      // Grows into the frame as it builds, so the finished thing has presence.
-      structure.current.scale.setScalar(1.06 + assemble * 0.26)
+      const spin = (1 - settle) * 0.42 + px * 0.22
+      system.current.rotation.y += (spin - system.current.rotation.y) * k
+      system.current.rotation.x += (0.06 + py * 0.06 - system.current.rotation.x) * k
+      // Grows into the frame; the camera pulls back to meet it.
+      system.current.scale.setScalar(0.78 + found * 0.22)
+      system.current.position.y = -0.5 + found * 0.2
     }
 
-    // The nine instruments arrive from the Atlas and take their places around
-    // the plinth — the tools that produced the thing, set down beside it.
-    ringRefs.current.forEach((el, i) => {
+    /* Foundation — customer evidence. */
+    plateRefs.current.forEach((el, i) => {
       if (!el) return
-      const a = (i / 9) * Math.PI * 2
-      const land = ease(Math.min(1, Math.max(0, (assemble - 0.34) / 0.5 - i * 0.045)))
-      const R = 1.58
+      const p = plates[i]
+      const local = ease(Math.min(1, Math.max(0, (found - p.delay) / (1 - p.delay || 1))))
+      el.position.set(p.x, -0.62 + (1 - local) * 1.6, p.z)
+      el.scale.setScalar(local)
+      const m = el.material as THREE.Material & { opacity: number }
+      m.opacity = local
+    })
+
+    // One lit node per piece of evidence, sitting on its plate.
+    if (evidenceNodes.current) {
+      for (let i = 0; i < plates.length; i++) {
+        const p = plates[i]
+        const local = Math.min(1, Math.max(0, (found - p.delay) / (1 - p.delay || 1)))
+        const pulse = 0.7 + Math.sin(time * 1.3 + i * 0.9) * 0.3
+        tmpObj.position.set(p.x, -0.585, p.z)
+        tmpObj.scale.setScalar(local * 0.02 * pulse)
+        tmpObj.updateMatrix()
+        evidenceNodes.current.setMatrixAt(i, tmpObj.matrix)
+      }
+      evidenceNodes.current.instanceMatrix.needsUpdate = true
+    }
+
+    /* Struts — assumptions, load-bearing now. */
+    strutRefs.current.forEach((el, i) => {
+      if (!el) return
+      const s = struts[i]
+      const local = ease(Math.min(1, Math.max(0, (strut - s.delay) / (1 - s.delay || 1))))
+      const R = 1.05
+      el.position.set(Math.cos(s.angle) * R, -0.56 + local * 0.5, Math.sin(s.angle) * R)
+      el.rotation.set(s.lean * local, -s.angle, s.lean * local)
+      el.scale.set(1, local, 1)
+      // Unverified struts keep breathing — they have not settled.
+      if (!s.verified) {
+        const m = (el.children[0] as THREE.Mesh)?.material as THREE.Material & { opacity: number }
+        if (m) m.opacity = (0.22 + Math.sin(time * 1.6 + i) * 0.09) * local
+      }
+    })
+
+    /* Modules — the Atlas instruments, seated. */
+    moduleRefs.current.forEach((el, i) => {
+      if (!el) return
+      const a = (i / MODULES) * Math.PI * 2
+      const delay = i * 0.045
+      const local = ease(Math.min(1, Math.max(0, (module - delay) / (1 - delay || 1))))
+      const R = 1.32
+      // They fly in from where the Atlas bench held them: out and behind.
+      tmpVec.set(Math.cos(a) * R, 0.42, Math.sin(a) * R)
       el.position.set(
-        Math.cos(a) * R * (0.4 + land * 0.6),
-        -1.3 + (1 - land) * 2.4,
-        Math.sin(a) * R * (0.4 + land * 0.6),
+        THREE.MathUtils.lerp(Math.cos(a) * 4.4, tmpVec.x, local),
+        THREE.MathUtils.lerp(-1.4, tmpVec.y, local),
+        THREE.MathUtils.lerp(Math.sin(a) * 4.4 - 2, tmpVec.z, local),
       )
-      el.scale.setScalar(land * 0.13)
-      el.rotation.y = a + time * 0.06
-      const m = (el.children[0] as THREE.Mesh)?.material as THREE.Material & { opacity: number }
-      if (m) m.opacity = land * 0.85
+      el.rotation.y = -a + (1 - local) * 3
+      el.scale.setScalar(local * 0.98)
+      // Each module keeps working: a slow individual bob.
+      el.position.y += Math.sin(time * 0.8 + i * 0.7) * 0.012 * local
     })
 
-    tiers.forEach((tier, i) => {
-      const el = plateRefs.current[i]
+    /* Value flow — the idle life. Beads never stop once the paths open. */
+    beadRefs.current.forEach((el, i) => {
       if (!el) return
-      const local = ease(Math.min(1, Math.max(0, (assemble - tier.delay) / (1 - tier.delay || 1))))
-      tmp.set(0, tier.y, 0)
-      el.position.lerpVectors(tier.from, tmp, local)
-      el.rotation.set(
-        tier.fromRot.x * (1 - local),
-        tier.fromRot.y * (1 - local),
-        tier.fromRot.z * (1 - local),
-      )
-      el.scale.setScalar(0.4 + local * 0.6)
+      const b = beads[i]
+      el.visible = flow > 0.04
+      if (!el.visible) return
+      const u = (time * b.speed + b.offset) % 1
+      paths[b.pathIndex].getPointAt(u, tmpVec)
+      el.position.copy(tmpVec)
+      // Fade in at both ends of the run so nothing pops.
+      const edge = Math.min(1, Math.min(u, 1 - u) * 8)
+      el.scale.setScalar(flow * edge * 0.03)
     })
 
-    // Junction lights come up as the joints lock.
-    nodeRefs.current.forEach((n, i) => {
-      if (!n) return
-      const lit = ease(Math.min(1, Math.max(0, assemble * tiers.length - i)))
-      n.scale.setScalar(lit * (1 + Math.sin(time * 1.6 + i) * 0.08))
-      const m = n.material as THREE.MeshBasicMaterial
-      m.opacity = lit * 0.9
-    })
+    /* Crown — the venture. Only lights once value actually reaches it. */
+    if (crown.current) {
+      crown.current.visible = flow > 0.02
+      crown.current.scale.setScalar(flow * (1 + Math.sin(time * 1.1) * 0.02))
+      crown.current.rotation.y = time * 0.14
+      crown.current.position.y = 1.24 + Math.sin(time * 0.7) * 0.014
+    }
+    if (crownGlow.current) {
+      const m = crownGlow.current.material as THREE.MeshBasicMaterial
+      m.opacity = flow * (0.16 + Math.sin(time * 1.4) * 0.05)
+      crownGlow.current.scale.setScalar(flow * (1 + Math.sin(time * 1.4) * 0.06))
+    }
 
-    // A soft pool of light on the floor, instead of a ring behind the object.
     if (pool.current) {
-      const lit = ease(range(t, 0.2, 0.7))
+      const lit = ease(range(t, 0.1, 0.6))
       pool.current.visible = lit > 0.02
-      pool.current.scale.setScalar(0.7 + lit * 0.6)
+      pool.current.scale.setScalar(0.8 + lit * 0.5)
       const m = pool.current.material as THREE.MeshBasicMaterial
-      m.opacity = lit * 0.1
+      m.opacity = lit * 0.09
     }
   })
 
   return (
     <group ref={root}>
-      {/* Floor pool. Sits under the structure, never behind it as a disc. */}
-      <mesh ref={pool} position={[0, -1.28, 0]} rotation={[-Math.PI / 2, 0, 0]}>
-        <circleGeometry args={[1.7, 48]} />
+      {/* A pool of light under the system, never a disc behind it. */}
+      <mesh ref={pool} position={[0, -0.78, 0]} rotation={[-Math.PI / 2, 0, 0]}>
+        <circleGeometry args={[2.1, 48]} />
         <meshBasicMaterial color={kit.p.action} transparent opacity={0} />
       </mesh>
 
-      <group ref={structure}>
-        {/* Plinth: the evidence the whole thing stands on. */}
-        <mesh position={[0, -1.18, 0]} material={mats.metal}>
-          <boxGeometry args={[2.1, 0.12, 1.35]} />
-          <Edges threshold={15} color={kit.p.intel} />
-        </mesh>
-
-        {tiers.map((tier, i) => (
-          <group
-            key={i}
+      <group ref={system}>
+        {/* ---------- Foundation: customer evidence ---------- */}
+        {plates.map((p, i) => (
+          <mesh
+            key={`p${i}`}
             ref={(el) => {
               plateRefs.current[i] = el
             }}
-            position={tier.from}
+            rotation={[0, p.rot, 0]}
+            material={mats.paper}
           >
-            <mesh material={tier.tone === 'glass' ? mats.glass : tier.tone === 'metal' ? mats.metal : mats.paper}>
-              <boxGeometry args={[tier.w, 0.075, tier.d]} />
-              <Edges
-                threshold={15}
-                color={tier.tone === 'glass' ? kit.p.intel : tier.tone === 'metal' ? kit.p.action : kit.p.paperEdge}
-              />
-            </mesh>
-            {/* Blueprint ink: a few ruled marks so a plate reads as drawn on. */}
-            {tier.tone === 'paper' && (
-              <group position={[0, 0.04, 0]} rotation={[-Math.PI / 2, 0, 0]}>
-                {[0.18, 0, -0.18].map((y, j) => (
-                  <mesh key={j} position={[0, y * tier.d, 0.001]}>
-                    <planeGeometry args={[tier.w * (0.62 - j * 0.14), 0.012]} />
-                    <meshBasicMaterial color={kit.p.paperEdge} transparent opacity={0.45} />
-                  </mesh>
-                ))}
-              </group>
-            )}
-          </group>
-        ))}
-
-        <Joints kit={kit} tiers={tiers} reveal={revealRef} />
-
-        {/*
-          The nine Atlas instruments, arrived and set down around the plinth.
-          Same hexagonal token the Atlas bench used, so the object the reader
-          has been clicking through is recognisably the one that lands here.
-        */}
-        {Array.from({ length: 9 }, (_, i) => (
-          <group
-            key={`ring${i}`}
-            ref={(el) => {
-              ringRefs.current[i] = el
-            }}
-            scale={0.001}
-          >
-            <mesh>
-              <cylinderGeometry args={[0.85, 0.85, 0.34, 6]} />
-              <meshStandardMaterial
-                color={i % 3 === 0 ? kit.p.action : i % 3 === 1 ? kit.p.intel : kit.p.signal}
-                emissive={i % 3 === 0 ? kit.p.action : i % 3 === 1 ? kit.p.intel : kit.p.signal}
-                emissiveIntensity={0.42}
-                roughness={0.4}
-                metalness={0.3}
-                transparent
-                opacity={0}
-              />
-            </mesh>
-          </group>
-        ))}
-
-        {/* Illuminated junctions. */}
-        {tiers.map((tier, i) => (
-          <mesh
-            key={`n${i}`}
-            ref={(el) => {
-              nodeRefs.current[i] = el
-            }}
-            position={[tier.w * 0.5 - 0.06, tier.y, tier.d * 0.5 - 0.06]}
-          >
-            <sphereGeometry args={[0.036, 12, 12]} />
-            <meshBasicMaterial color={kit.p.action} transparent opacity={0} />
+            <boxGeometry args={[p.w, 0.035, p.d]} />
+            <Edges threshold={15} color={kit.p.paperEdge} />
           </mesh>
         ))}
+
+        <instancedMesh
+          ref={evidenceNodes}
+          args={[undefined, undefined, plates.length]}
+          frustumCulled={false}
+        >
+          <sphereGeometry args={[1, 8, 8]} />
+          <meshBasicMaterial color={kit.p.signal} transparent opacity={0.9} />
+        </instancedMesh>
+
+        {/* ---------- Struts: assumptions carrying load ---------- */}
+        {struts.map((s, i) => (
+          <group
+            key={`s${i}`}
+            ref={(el) => {
+              strutRefs.current[i] = el
+            }}
+          >
+            <mesh material={s.verified ? mats.metal : mats.glass} position={[0, 0.5, 0]}>
+              <boxGeometry args={[0.035, 1, 0.035]} />
+              {!s.verified && <Edges threshold={15} color={kit.p.risk} />}
+            </mesh>
+          </group>
+        ))}
+
+        {/* ---------- Deck the modules sit on ---------- */}
+        <mesh position={[0, 0.36, 0]} material={mats.deck}>
+          <cylinderGeometry args={[1.62, 1.58, 0.05, 9]} />
+          <Edges threshold={15} color={kit.p.intel} />
+        </mesh>
+
+        {/* ---------- Modules: the Atlas instruments ---------- */}
+        {Array.from({ length: MODULES }, (_, i) => {
+          const tone = i % 3 === 0 ? kit.p.action : i % 3 === 1 ? kit.p.intel : kit.p.signal
+          return (
+            <group
+              key={`m${i}`}
+              ref={(el) => {
+                moduleRefs.current[i] = el
+              }}
+              scale={0.001}
+            >
+              {/* The hexagonal token the Atlas bench used. */}
+              <mesh>
+                <cylinderGeometry args={[0.17, 0.17, 0.1, 6]} />
+                <meshStandardMaterial color={tone} emissive={tone} emissiveIntensity={0.3} roughness={0.42} metalness={0.4} />
+                <Edges threshold={15} color={tone} />
+              </mesh>
+              {/* A small readout plate — the module is doing something. */}
+              <mesh position={[0, 0.075, 0]} rotation={[-Math.PI / 2, 0, 0]}>
+                <planeGeometry args={[0.13, 0.13]} />
+                <meshBasicMaterial color={kit.p.bg} transparent opacity={0.5} />
+              </mesh>
+            </group>
+          )
+        })}
+
+        {/* ---------- Value flow ---------- */}
+        <Paths kit={kit} paths={paths} />
+        {beads.map((b, i) => (
+          <mesh
+            key={`b${i}`}
+            ref={(el) => {
+              beadRefs.current[i] = el
+            }}
+            visible={false}
+          >
+            <sphereGeometry args={[1, 8, 8]} />
+            <meshBasicMaterial color={b.pathIndex >= MODULES ? kit.p.action : kit.p.signal} />
+          </mesh>
+        ))}
+
+        {/* ---------- Crown: the venture ---------- */}
+        <group ref={crown} position={[0, 1.24, 0]} visible={false}>
+          <mesh>
+            <octahedronGeometry args={[0.26, 0]} />
+            <meshStandardMaterial
+              color={kit.p.action}
+              emissive={kit.p.action}
+              emissiveIntensity={0.7}
+              roughness={0.24}
+              metalness={0.5}
+            />
+            <Edges threshold={12} color={kit.p.paper} />
+          </mesh>
+          <mesh ref={crownGlow}>
+            <sphereGeometry args={[0.62, 20, 20]} />
+            <meshBasicMaterial color={kit.p.action} transparent opacity={0} />
+          </mesh>
+        </group>
       </group>
     </group>
   )

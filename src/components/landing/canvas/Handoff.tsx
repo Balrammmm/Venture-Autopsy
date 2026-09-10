@@ -99,13 +99,20 @@ const SEAMS: CarrySpec[] = [
     from: 'atlas',
     to: 'resolution',
     kind: 'token',
-    count: 7,
+    // One carrier per Atlas instrument, so every module the reader stepped
+    // through is visibly the one that arrives.
+    count: 9,
     origin: (i) => {
-      const a = (i / 7) * Math.PI * 2 + 0.4
+      const a = (i / 9) * Math.PI * 2 + 0.4
       return new THREE.Vector3(Math.cos(a) * 2.9, Math.sin(a * 2) * 0.5, Math.sin(a) * 2.9 * 0.55)
     },
-    // They land in the monument's stack.
-    target: (i) => new THREE.Vector3(0, (i / 7 - 0.5) * 2.1, 0),
+    // They land exactly on the venture architecture's module ring — same
+    // radius and deck height Resolution seats them at, so the handoff has no
+    // seam: the carrier stops where the real module starts.
+    target: (i) => {
+      const a = (i / 9) * Math.PI * 2
+      return new THREE.Vector3(Math.cos(a) * 1.32, 0.42, Math.sin(a) * 1.32)
+    },
   },
 ]
 

@@ -4,6 +4,7 @@ import dynamic from 'next/dynamic'
 import { useEffect, useState } from 'react'
 import { useReducedMotion } from 'framer-motion'
 import { HeroScene } from '@/components/landing/StaticStage'
+import type { SeedProfile } from './IdeaSeed'
 
 const IdeaSeed = dynamic(() => import('./IdeaSeed').then((m) => m.IdeaSeed), {
   ssr: false,
@@ -24,7 +25,15 @@ function webglAvailable() {
  * The seed, or the drawing of it. Reduced motion, missing WebGL and a lost
  * context all land on the finished static scene rather than an empty box.
  */
-export function SeedStage({ step, charge }: { step: number; charge: React.MutableRefObject<number> }) {
+export function SeedStage({
+  step,
+  charge,
+  profile,
+}: {
+  step: number
+  charge: React.MutableRefObject<number>
+  profile: SeedProfile
+}) {
   const reduce = useReducedMotion()
   const [canRender, setCanRender] = useState<boolean | null>(null)
   const [failed, setFailed] = useState(false)
@@ -40,7 +49,7 @@ export function SeedStage({ step, charge }: { step: number; charge: React.Mutabl
 
   return (
     <div className="aspect-square w-full overflow-hidden rounded-[3px]">
-      {useStatic ? <HeroScene /> : <IdeaSeed step={step} charge={charge} />}
+      {useStatic ? <HeroScene /> : <IdeaSeed step={step} charge={charge} profile={profile} />}
     </div>
   )
 }

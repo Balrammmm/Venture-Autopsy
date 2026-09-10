@@ -4,8 +4,9 @@ import { useEffect, useRef, useState } from 'react'
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion'
 import { Button, Chip, IconClose, IconTrash, Spinner } from '@/components/ui/kit'
 import { ApiError, api, del, post } from '@/lib/client'
+import { useMiloRoam } from './useMiloRoam'
 
-export type MiloMood = 'idle' | 'alert' | 'wary' | 'thinking' | 'pleased'
+export type MiloMood = 'idle' | 'alert' | 'wary' | 'thinking' | 'pleased' | 'asleep'
 
 const EASE = [0.23, 1, 0.32, 1] as const
 
@@ -16,10 +17,11 @@ const EASE = [0.23, 1, 0.32, 1] as const
 function MiloFox({ mood, size = 46 }: { mood: MiloMood; size?: number }) {
   const reduce = useReducedMotion()
   const [blink, setBlink] = useState(false)
+  const asleep = mood === 'asleep'
   const accent = mood === 'wary' ? 'rgb(var(--risk))' : 'rgb(var(--action-text))'
 
   useEffect(() => {
-    if (reduce) return
+    if (reduce || asleep) return
     let t: number
     const loop = () => {
       t = window.setTimeout(() => {
@@ -30,7 +32,7 @@ function MiloFox({ mood, size = 46 }: { mood: MiloMood; size?: number }) {
     }
     loop()
     return () => clearTimeout(t)
-  }, [reduce])
+  }, [reduce, asleep])
 
   return (
     <svg width={size} height={size} viewBox="0 0 48 48" fill="none" aria-hidden="true">
@@ -69,37 +71,64 @@ function MiloFox({ mood, size = 46 }: { mood: MiloMood; size?: number }) {
         transition={{ duration: mood === 'thinking' ? 2.4 : 1.9, repeat: Infinity, ease: 'easeInOut' }}
         style={{ originX: '24px', originY: '26px' }}
       >
-        {/* Ears flatten when wary. */}
+        {/* Tall cat ears. They flatten when wary and droop when asleep. */}
         <motion.path
-          d="M15.4 20.6 13.8 12.2l7.3 4.4"
+          d="M15.8 19.8 13.2 10.4l8.4 5.2"
           fill={accent}
           fillOpacity="0.92"
-          animate={reduce ? {} : { rotate: mood === 'wary' ? -24 : 0 }}
+          animate={reduce ? {} : { rotate: mood === 'wary' ? -26 : asleep ? -14 : 0 }}
           transition={{ type: 'spring', duration: 0.5, bounce: 0.25 }}
           style={{ originX: '17px', originY: '19px' }}
         />
         <motion.path
-          d="M32.6 20.6 34.2 12.2l-7.3 4.4"
+          d="M32.2 19.8 34.8 10.4l-8.4 5.2"
           fill={accent}
           fillOpacity="0.92"
-          animate={reduce ? {} : { rotate: mood === 'wary' ? 24 : 0 }}
+          animate={reduce ? {} : { rotate: mood === 'wary' ? 26 : asleep ? 14 : 0 }}
           transition={{ type: 'spring', duration: 0.5, bounce: 0.25 }}
           style={{ originX: '31px', originY: '19px' }}
         />
-        {/* Head plate */}
+        {/* Head — rounder and wider than a fox's, machined from one plate. */}
         <path
-          d="M24 15.2c6.2 0 9.8 4.1 9.8 9.2 0 5.5-4.3 9-9.8 9s-9.8-3.5-9.8-9c0-5.1 3.6-9.2 9.8-9.2Z"
+          d="M24 14.6c6.9 0 10.6 4.3 10.6 9.7 0 5.9-4.7 9.8-10.6 9.8S13.4 30.2 13.4 24.3c0-5.4 3.7-9.7 10.6-9.7Z"
           fill="rgb(var(--ink-800))"
           stroke={accent}
           strokeWidth="1.5"
         />
-        <path d="M17.6 21.4h12.8" stroke={accent} strokeOpacity="0.28" strokeWidth="0.9" />
-        <motion.g animate={{ scaleY: blink ? 0.1 : 1 }} transition={{ duration: 0.09 }} style={{ originY: '24.4px' }}>
-          <circle cx="20.3" cy="24.4" r="1.75" fill={accent} />
-          <circle cx="27.7" cy="24.4" r="1.75" fill={accent} />
-        </motion.g>
-        <path d="M24 27.8v2.1" stroke={accent} strokeOpacity="0.6" strokeWidth="1.4" strokeLinecap="round" />
-        <circle cx="24" cy="30.7" r="1.05" fill={accent} />
+        <path d="M17.2 20.9h13.6" stroke={accent} strokeOpacity="0.26" strokeWidth="0.9" />
+
+        {/* Eyes. Closed arcs when asleep, otherwise blinking discs. */}
+        {asleep ? (
+          <g>
+            <path d="M18.2 24.6q2.1 1.9 4.2 0" stroke={accent} strokeWidth="1.5" strokeLinecap="round" fill="none" />
+            <path d="M25.6 24.6q2.1 1.9 4.2 0" stroke={accent} strokeWidth="1.5" strokeLinecap="round" fill="none" />
+          </g>
+        ) : (
+          <motion.g animate={{ scaleY: blink ? 0.1 : 1 }} transition={{ duration: 0.09 }} style={{ originY: '24.2px' }}>
+            <circle cx="20.1" cy="24.2" r="1.85" fill={accent} />
+            <circle cx="27.9" cy="24.2" r="1.85" fill={accent} />
+          </motion.g>
+        )}
+
+        {/* Muzzle and whiskers — the cat tell. */}
+        <path d="M24 27.4v1.7" stroke={accent} strokeOpacity="0.6" strokeWidth="1.3" strokeLinecap="round" />
+        <path d="M22.6 30.2q1.4 1.2 2.8 0" stroke={accent} strokeOpacity="0.75" strokeWidth="1.2" strokeLinecap="round" fill="none" />
+        <g stroke={accent} strokeOpacity="0.42" strokeWidth="0.85" strokeLinecap="round">
+          <path d="M13.6 27.4 8.8 26.4M13.6 29.2l-4.4 1.3" />
+          <path d="M34.4 27.4l4.8-1M34.4 29.2l4.4 1.3" />
+        </g>
+
+        {/* Sleep marks. */}
+        {asleep && !reduce && (
+          <motion.g
+            animate={{ opacity: [0, 1, 0], y: [0, -5, -9] }}
+            transition={{ duration: 3.4, repeat: Infinity, ease: 'easeOut' }}
+          >
+            <text x="35" y="14" fontSize="7" fontFamily="var(--font-mono), monospace" fill={accent} opacity="0.8">
+              z
+            </text>
+          </motion.g>
+        )}
       </motion.g>
     </svg>
   )
@@ -118,6 +147,10 @@ const ACTIONS: { id: string; label: string; when?: string[] }[] = [
   { id: 'sevendays', label: 'Build my next seven days', when: ['launch', 'strategy'] },
   { id: 'research', label: 'Summarise the research', when: ['research', 'market'] },
   { id: 'launch', label: 'Build a launch plan', when: ['launch', 'strategy'] },
+  { id: 'biggestrisk', label: 'Find the biggest risk', when: ['assumptions', 'genome', 'validate'] },
+  { id: 'competitors', label: 'Analyse competitors from my evidence', when: ['research', 'market'] },
+  { id: 'score', label: 'Explain this score', when: ['genome', 'verdict'] },
+  { id: 'summarise', label: 'Summarise the venture' },
 ]
 
 interface Message {
@@ -150,7 +183,29 @@ export function Milo({
   const triggerRef = useRef<HTMLButtonElement>(null)
   const closeRef = useRef<HTMLButtonElement>(null)
 
+  // Calm mode is remembered, because someone who turns it off wants it off.
+  const [calm, setCalm] = useState(false)
+  useEffect(() => {
+    try {
+      setCalm(localStorage.getItem('va_milo_calm') === '1')
+    } catch {
+      /* private mode — he simply roams */
+    }
+  }, [])
+  useEffect(() => {
+    try {
+      localStorage.setItem('va_milo_calm', calm ? '1' : '0')
+    } catch {
+      /* nothing to persist to */
+    }
+  }, [calm])
+
+  // Reduced motion pins him too, and the room being open stops him wandering
+  // out from under his own panel.
+  const roam = useMiloRoam({ calm: calm || Boolean(reduce), paused: open })
+
   const effectiveMood: MiloMood = busy ? 'thinking' : mood
+  const displayMood: MiloMood = busy ? 'thinking' : roam.state === 'sleeping' ? 'asleep' : mood
 
   useEffect(() => {
     if (!open || loaded) return
@@ -229,28 +284,53 @@ export function Milo({
 
   return (
     <>
-      <motion.button
-        ref={triggerRef}
-        type="button"
-        onClick={() => setOpen((o) => !o)}
-        aria-expanded={open}
-        aria-haspopup="dialog"
-        aria-label={open ? 'Close the Founder Room' : 'Open the Founder Room with Milo'}
-        className="no-print fixed bottom-5 right-5 z-40 flex h-[60px] w-[60px] cursor-pointer items-center justify-center rounded-full border border-[rgb(var(--paper)/0.16)] bg-ink-700/90 backdrop-blur-md transition-colors duration-200 ease-out hover:border-action/50 md:bottom-7 md:right-7"
-        animate={reduce ? {} : { y: [0, -5, 0] }}
-        transition={{ duration: 5.4, repeat: Infinity, ease: 'easeInOut' }}
-        whileTap={{ scale: 0.94 }}
-        style={{ boxShadow: 'var(--shadow-lift)' }}
+      {/*
+        Milo roams the margin. The wrapper is what moves — it is fixed at the
+        origin and translated each frame, and only the button inside it takes
+        pointer events, so nothing he passes over becomes unclickable.
+      */}
+      <div
+        ref={roam.el}
+        className="no-print pointer-events-none fixed left-0 top-0 z-40"
+        style={{ willChange: 'transform' }}
       >
-        <MiloFox mood={effectiveMood} />
-        {effectiveMood === 'wary' && !open && (
-          <span
-            aria-hidden="true"
-            className="absolute right-1 top-1 h-2 w-2 rounded-full bg-risk"
-            style={{ boxShadow: '0 0 0 3px rgb(var(--ink-700))' }}
-          />
+        <motion.button
+          ref={triggerRef}
+          type="button"
+          onClick={() => setOpen((o) => !o)}
+          aria-expanded={open}
+          aria-haspopup="dialog"
+          aria-label={open ? 'Close the Founder Room' : 'Open the Founder Room with Milo'}
+          className="pointer-events-auto flex h-[60px] w-[60px] cursor-pointer items-center justify-center rounded-full border border-[rgb(var(--paper)/0.16)] bg-[rgb(var(--ink-700)/0.9)] backdrop-blur-md transition-colors duration-200 ease-out hover:border-action/50"
+          animate={reduce || roam.state === 'sleeping' ? {} : { y: [0, -5, 0] }}
+          transition={{ duration: 5.4, repeat: Infinity, ease: 'easeInOut' }}
+          whileTap={{ scale: 0.94 }}
+          style={{ boxShadow: 'var(--shadow-lift)' }}
+        >
+          <MiloFox mood={displayMood} />
+          {effectiveMood === 'wary' && !open && (
+            <span
+              aria-hidden="true"
+              className="absolute right-1 top-1 h-2 w-2 rounded-full bg-risk"
+              style={{ boxShadow: '0 0 0 3px rgb(var(--ink-700))' }}
+            />
+          )}
+        </motion.button>
+
+        {/* Calm mode: parks him in the corner for good. */}
+        {!open && (
+          <button
+            type="button"
+            onClick={() => setCalm((c) => !c)}
+            aria-pressed={calm}
+            title={calm ? 'Let Milo roam' : 'Keep Milo still'}
+            aria-label={calm ? 'Let Milo roam' : 'Keep Milo still'}
+            className="tap pointer-events-auto absolute -left-1 -top-1 flex h-6 w-6 items-center justify-center rounded-full border border-[color:var(--rule)] bg-[rgb(var(--ink-800))] text-[9px] text-paper-sub opacity-0 transition-opacity duration-200 focus-visible:opacity-100 group-hover:opacity-100 hover:opacity-100"
+          >
+            {calm ? '↻' : '⏸'}
+          </button>
         )}
-      </motion.button>
+      </div>
 
       <AnimatePresence>
         {open && (
