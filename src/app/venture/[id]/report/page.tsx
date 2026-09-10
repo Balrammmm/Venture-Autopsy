@@ -1,10 +1,12 @@
 'use client'
 
-import { use } from 'react'
+import { use, useState } from 'react'
 import { AppShell, useSession } from '@/components/AppShell'
 import { VentureNav } from '@/components/venture/Chrome'
 import { useVenture } from '@/components/venture/useVenture'
-import { Button, ErrorNote, EvidenceTag, IconDownload, IconPrint, IntegrityNote, Rule, Skeleton } from '@/components/ui/kit'
+import { Presentation } from '@/components/venture/report/Presentation'
+import { buildSlides } from '@/components/venture/report/buildSlides'
+import { Button, ErrorNote, EvidenceTag, IconDownload, IconLayers, IconPrint, IntegrityNote, Rule, Skeleton } from '@/components/ui/kit'
 
 function Section({ title, children, breakBefore }: { title: string; children: React.ReactNode; breakBefore?: boolean }) {
   return (
@@ -27,6 +29,7 @@ function Row({ term, children }: { term: string; children: React.ReactNode }) {
 function ReportPage({ id }: { id: string }) {
   const { user } = useSession()
   const v = useVenture(id)
+  const [presenting, setPresenting] = useState(false)
 
   function exportJson() {
     if (!v.data) return
@@ -78,13 +81,26 @@ function ReportPage({ id }: { id: string }) {
             <IconDownload size={13} />
             <span className="hidden sm:inline">JSON</span>
           </Button>
-          <Button variant="ghost" size="sm" onClick={() => window.print()}>
+          <Button variant="quiet" size="sm" onClick={() => window.print()}>
             <IconPrint size={13} />
             <span className="hidden sm:inline">Print</span>
+          </Button>
+          {/* Print stays on the document; this is for showing it to a room. */}
+          <Button variant="primary" size="sm" onClick={() => setPresenting(true)}>
+            <IconLayers size={13} />
+            <span className="hidden sm:inline">Present</span>
           </Button>
         </>
       }
     >
+      {presenting && (
+        <Presentation
+          title={venture.title}
+          slides={buildSlides({ venture, sections, assumptions, experiments, sources })}
+          onClose={() => setPresenting(false)}
+        />
+      )}
+
       <div className="no-print rule-b sticky top-[57px] z-30 bg-ink-800/85 pt-6 backdrop-blur-xl">
         <VentureNav id={id} />
       </div>

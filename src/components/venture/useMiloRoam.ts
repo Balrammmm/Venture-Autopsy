@@ -35,7 +35,29 @@ interface Spot {
   y: number
 }
 
-export function useMiloRoam({ calm, paused }: { calm: boolean; paused: boolean }) {
+export interface MiloMotion {
+  /** Pixels per frame, smoothed. Drives whether he walks or sits. */
+  speed: number
+  /** 1 facing right, -1 facing left. */
+  facing: number
+  /** Accumulated stride phase, so the legs cycle with real distance covered. */
+  gait: number
+  pointerX: number
+  pointerY: number
+  x: number
+  y: number
+}
+
+export function useMiloRoam({
+  calm,
+  paused,
+  trust,
+}: {
+  calm: boolean
+  paused: boolean
+  /** 0–1. A cat that trusts you stops running away from your cursor. */
+  trust: React.MutableRefObject<number>
+}) {
   const el = useRef<HTMLDivElement>(null)
   const [state, setStateValue] = useState<RoamState>('pinned')
   // The frame loop must not be torn down when the mood changes, so it reads
@@ -54,6 +76,22 @@ export function useMiloRoam({ calm, paused }: { calm: boolean; paused: boolean }
   const lastActivity = useRef(Date.now())
   const nextHop = useRef(0)
   const lastCheck = useRef(0)
+
+  /**
+   * What the creature riding this needs to animate itself: how fast it is
+   * travelling, which way it faces, an accumulated gait phase so the legs
+   * cycle in step with real movement, and where the cursor is so the eyes and
+   * ears can follow it.
+   */
+  const motion = useRef<MiloMotion>({
+    speed: 0,
+    facing: 1,
+    gait: 0,
+    pointerX: -9999,
+    pointerY: -9999,
+    x: 0,
+    y: 0,
+  })
 
   useEffect(() => {
     const corner = (): Spot => ({
@@ -174,10 +212,13 @@ export function useMiloRoam({ calm, paused }: { calm: boolean; paused: boolean }
         target.current = corner()
         setState('pinned')
       } else {
-        // Personal space: if the cursor closes in, leave immediately.
+        // Personal space: if the cursor closes in, leave. A tamed cat lets you
+        // get close — that is the whole reward for taming him — but he still
+        // will not sit on top of anything, because the perch test is separate.
         const dx = pos.current.x + SIZE / 2 - pointer.current.x
         const dy = pos.current.y + SIZE / 2 - pointer.current.y
-        const near = Math.hypot(dx, dy) < PERSONAL_SPACE
+        const shy = trust.current < 0.55
+        const near = shy && Math.hypot(dx, dy) < PERSONAL_SPACE
 
         if (near) {
           setState('fleeing')
@@ -214,8 +255,25 @@ export function useMiloRoam({ calm, paused }: { calm: boolean; paused: boolean }
 
       // Critically damped-ish follow: quick when fleeing, lazy when wandering.
       const k = stateRef.current === 'fleeing' ? 0.14 : stateRef.current === 'sleeping' ? 0.03 : 0.045
+      const prevX = pos.current.x
+      const prevY = pos.current.y
       pos.current.x += (target.current.x - pos.current.x) * k
       pos.current.y += (target.current.y - pos.current.y) * k
+
+      // Hand the creature everything it needs to animate itself.
+      const dxStep = pos.current.x - prevX
+      const dyStep = pos.current.y - prevY
+      const step = Math.hypot(dxStep, dyStep)
+      const m = motion.current
+      m.speed += (step - m.speed) * 0.2
+      // He walks the vertical edge, so "forward" is up or down; the body turns
+      // to face the way it is going and holds that facing while still.
+      if (Math.abs(dyStep) > 0.12) m.facing = dyStep > 0 ? 1 : -1
+      m.gait += step * 0.26
+      m.pointerX = pointer.current.x
+      m.pointerY = pointer.current.y
+      m.x = pos.current.x
+      m.y = pos.current.y
 
       node.style.transform = `translate3d(${Math.round(pos.current.x)}px, ${Math.round(pos.current.y)}px, 0)`
     }
@@ -231,7 +289,7 @@ export function useMiloRoam({ calm, paused }: { calm: boolean; paused: boolean }
     // `state` is read inside the loop but the loop must not be torn down when
     // it changes, so it is intentionally not a dependency.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [calm, paused])
+  }, [calm, paused, trust])
 
-  return { el, state }
+  return { el, state, motion }
 }

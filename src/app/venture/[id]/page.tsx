@@ -5,6 +5,7 @@ import { useSearchParams } from 'next/navigation'
 import { AppShell, useSession } from '@/components/AppShell'
 import { VentureNav, ModuleFrame, ModuleEmpty } from '@/components/venture/Chrome'
 import { AssumptionMinefield, FailureMuseum, IdeaGenome, PivotPrism } from '@/components/venture/modules/Command'
+import { CoreStage } from '@/components/venture/core/CoreStage'
 import { Milo, type MiloMood } from '@/components/venture/Milo'
 import { VentureHeader } from '@/components/venture/VentureHeader'
 import { useVenture } from '@/components/venture/useVenture'
@@ -15,6 +16,7 @@ function CommandCenter({ id }: { id: string }) {
   const params = useSearchParams()
   const v = useVenture(id)
   const [context, setContext] = useState<string | undefined>('genome')
+  const [ask, setAsk] = useState<{ about: string; at: number } | null>(null)
   const started = useRef(false)
 
   // Arriving with ?analyze=1 from onboarding kicks the analysis off once.
@@ -108,7 +110,23 @@ function CommandCenter({ id }: { id: string }) {
       }
     >
       <VentureHeader venture={venture} verdict={sections.verdict} api={v} />
-      <div className="rule-b sticky top-[57px] z-30 bg-ink-800/85 backdrop-blur-xl">
+
+      {/*
+        The core: a working model of the chain, and the signals that feed the
+        readiness figure. Everything in it comes from real rows, so it is empty
+        and says so until the atlas is built.
+      */}
+      <CoreStage
+        venture={venture}
+        genome={sections.genome ?? null}
+        verdict={sections.verdict ?? null}
+        assumptions={v.data.assumptions}
+        experiments={v.data.experiments}
+        sources={v.data.sources}
+        onAskMilo={(about) => setAsk({ about, at: Date.now() })}
+      />
+
+      <div className="rule-b sticky top-[57px] z-30 bg-[rgb(var(--ink-800)/0.85)] backdrop-blur-xl">
         <VentureNav id={id} />
       </div>
 
@@ -202,7 +220,7 @@ function CommandCenter({ id }: { id: string }) {
         )}
       </ModuleFrame>
 
-      <Milo ventureId={id} context={context} mood={mood} />
+      <Milo ventureId={id} context={context} mood={mood} ask={ask} />
     </AppShell>
   )
 }

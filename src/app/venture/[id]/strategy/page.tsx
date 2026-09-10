@@ -5,6 +5,7 @@ import { AppShell, useSession } from '@/components/AppShell'
 import { ModuleEmpty, ModuleFrame, VentureNav } from '@/components/venture/Chrome'
 import { BusinessModelBlueprint, FlightPlan, FutureScope } from '@/components/venture/modules/Strategy'
 import { Milo } from '@/components/venture/Milo'
+import { ModelMachine } from '@/components/venture/machine/ModelMachine'
 import { useVenture } from '@/components/venture/useVenture'
 import { ErrorNote, Skeleton } from '@/components/ui/kit'
 import type { BusinessModel } from '@/lib/atlas-types'
@@ -13,6 +14,7 @@ function StrategyPage({ id }: { id: string }) {
   const { user } = useSession()
   const v = useVenture(id)
   const [context, setContext] = useState<string>('model')
+  const [ask, setAsk] = useState<{ about: string; at: number } | null>(null)
 
   useEffect(() => {
     const observer = new IntersectionObserver(
@@ -61,6 +63,26 @@ function StrategyPage({ id }: { id: string }) {
       {v.actionError && (
         <ErrorNote className="mt-6" message={v.actionError.message} hint={v.actionError.hint} onRetry={v.clearActionError} />
       )}
+
+      {/*
+        The machine is the page's focal system: seven wired stages where a
+        change to one visibly travels through the rest. The blueprint below is
+        the analysis's own account of the model, which the machine is a way of
+        pressure-testing rather than a replacement for.
+      */}
+      <ModuleFrame
+        id="machine"
+        name="Business Model Machine"
+        blurb="Customer → value → price → revenue → cost → retention, wired together. Change any stage and watch the change travel."
+        busy={false}
+      >
+        <ModelMachine
+          ventureId={id}
+          model={sections.model ?? null}
+          launch={sections.launch ?? null}
+          onAskMilo={(about) => setAsk({ about, at: Date.now() })}
+        />
+      </ModuleFrame>
 
       <ModuleFrame
         id="model"
@@ -115,7 +137,7 @@ function StrategyPage({ id }: { id: string }) {
         )}
       </ModuleFrame>
 
-      <Milo ventureId={id} context={context} mood="idle" />
+      <Milo ventureId={id} context={context} mood="idle" ask={ask} />
     </AppShell>
   )
 }

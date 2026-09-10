@@ -4,6 +4,7 @@ import { use, useState } from 'react'
 import { AppShell, useSession } from '@/components/AppShell'
 import { ModuleEmpty, ModuleFrame, VentureNav } from '@/components/venture/Chrome'
 import { MarketTerrain } from '@/components/venture/modules/MarketTerrain'
+import { Observatory } from '@/components/venture/observatory/Observatory'
 import { Milo } from '@/components/venture/Milo'
 import { useVenture } from '@/components/venture/useVenture'
 import {
@@ -45,6 +46,7 @@ function ResearchPage({ id }: { id: string }) {
   const [saving, setSaving] = useState(false)
   const [researching, setResearching] = useState(false)
   const [researchNote, setResearchNote] = useState<string | null>(null)
+  const [ask, setAsk] = useState<{ about: string; at: number } | null>(null)
 
   async function add() {
     if (!snippet.trim()) return
@@ -110,6 +112,32 @@ function ResearchPage({ id }: { id: string }) {
       {v.actionError && (
         <ErrorNote className="mt-6" message={v.actionError.message} hint={v.actionError.hint} onRetry={v.clearActionError} />
       )}
+
+      {/*
+        The observatory is this page's focal system: everything collected, laid
+        out as a field with the gaps visible. The terrain and the desk below it
+        stay, because one is the analysis and the other is where you add rows.
+      */}
+      <ModuleFrame
+        id="observatory"
+        name="Evidence Observatory"
+        blurb="Every source, claim and unknown as a node you can drag, cluster and open. Faded rings are the holes in what you actually know."
+        busy={false}
+        tools={
+          <span className="font-mono text-[10.5px] uppercase tracking-[0.14em] text-paper-sub">
+            {v.data.sources.length} source{v.data.sources.length === 1 ? '' : 's'}
+          </span>
+        }
+      >
+        <Observatory
+          ventureId={id}
+          sources={v.data.sources}
+          market={sections.market ?? null}
+          assumptions={v.data.assumptions}
+          onDeleteSource={v.deleteSource}
+          onAskMilo={(about) => setAsk({ about, at: Date.now() })}
+        />
+      </ModuleFrame>
 
       <ModuleFrame
         id="market"
@@ -291,7 +319,7 @@ function ResearchPage({ id }: { id: string }) {
       </section>
 
       <div className="pb-24" />
-      <Milo ventureId={id} context="market" mood="idle" />
+      <Milo ventureId={id} context="research" mood="idle" ask={ask} />
     </AppShell>
   )
 }

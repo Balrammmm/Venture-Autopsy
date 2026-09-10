@@ -5,6 +5,7 @@ import { motion, useReducedMotion } from 'framer-motion'
 import { AppShell, useSession } from '@/components/AppShell'
 import { VentureNav } from '@/components/venture/Chrome'
 import { Milo } from '@/components/venture/Milo'
+import { ValidationLab } from '@/components/venture/lab/ValidationLab'
 import { useVenture, type ExperimentRow } from '@/components/venture/useVenture'
 import {
   Button,
@@ -88,6 +89,7 @@ function ValidatePage({ id }: { id: string }) {
   const [newName, setNewName] = useState('')
   const [newHypothesis, setNewHypothesis] = useState('')
   const [filter, setFilter] = useState<string>('all')
+  const [ask, setAsk] = useState<{ about: string; at: number } | null>(null)
 
   const experiments = v.data?.experiments ?? []
   const assumptions = v.data?.assumptions ?? []
@@ -135,10 +137,32 @@ function ValidatePage({ id }: { id: string }) {
         <ErrorNote className="mt-6" message={v.actionError.message} hint={v.actionError.hint} onRetry={v.clearActionError} />
       )}
 
+      {/*
+        The bench comes first: the terrain shows which assumptions are actually
+        dangerous, and the rigs below it are what you put them into. The
+        editable list further down stays, because that is where rows are made.
+      */}
+      <section className="rule-b py-10 md:py-12">
+        <div className="mb-6">
+          <h1 className="display text-[clamp(1.9rem,4vw,2.9rem)] leading-[1.02] text-paper">Validation Lab</h1>
+          <p className="mt-2 max-w-measure text-[13.5px] text-paper-faint">
+            Height is impact, position is uncertainty. Drag a specimen onto a rig to test it — the corner marked
+            fatal is where the venture actually ends.
+          </p>
+        </div>
+        <ValidationLab
+          assumptions={v.data.assumptions}
+          experiments={experiments}
+          onLink={(experimentId, assumptionId) => v.updateExperiment(experimentId, { assumptionId })}
+          onStatus={(experimentId, status) => v.updateExperiment(experimentId, { status })}
+          onAskMilo={(about) => setAsk({ about, at: Date.now() })}
+        />
+      </section>
+
       <section className="py-12 md:py-16">
         <div className="mb-8 flex flex-wrap items-end justify-between gap-x-6 gap-y-4">
           <div>
-            <h1 className="display text-[clamp(1.9rem,4vw,2.9rem)] leading-[1.02] text-paper">Validation Lab</h1>
+            <h2 className="display text-[clamp(1.6rem,3vw,2.2rem)] leading-[1.02] text-paper">Experiment records</h2>
             <p className="mt-2 max-w-measure text-[13.5px] text-paper-faint">
               Every experiment names what would make it pass and what would kill it. Concluding one moves its
               assumption with it.
@@ -411,7 +435,7 @@ function ValidatePage({ id }: { id: string }) {
       </section>
 
       <div className="pb-24" />
-      <Milo ventureId={id} context="validate" mood={failed > 0 ? 'wary' : passed > 0 ? 'pleased' : 'idle'} />
+      <Milo ventureId={id} context="validate" mood={failed > 0 ? 'wary' : passed > 0 ? 'pleased' : 'idle'} ask={ask} />
     </AppShell>
   )
 }

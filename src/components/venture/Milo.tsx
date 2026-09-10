@@ -1,138 +1,15 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion'
 import { Button, Chip, IconClose, IconTrash, Spinner } from '@/components/ui/kit'
 import { ApiError, api, del, post } from '@/lib/client'
 import { useMiloRoam } from './useMiloRoam'
+import { MiloCat } from './MiloCat'
 
 export type MiloMood = 'idle' | 'alert' | 'wary' | 'thinking' | 'pleased' | 'asleep'
 
 const EASE = [0.23, 1, 0.32, 1] as const
-
-/* ------------------------------------------------------------------ *
- * The fox. Geometric and mechanical — a small instrument, not a mascot.
- * ------------------------------------------------------------------ */
-
-function MiloFox({ mood, size = 46 }: { mood: MiloMood; size?: number }) {
-  const reduce = useReducedMotion()
-  const [blink, setBlink] = useState(false)
-  const asleep = mood === 'asleep'
-  const accent = mood === 'wary' ? 'rgb(var(--risk))' : 'rgb(var(--action-text))'
-
-  useEffect(() => {
-    if (reduce || asleep) return
-    let t: number
-    const loop = () => {
-      t = window.setTimeout(() => {
-        setBlink(true)
-        window.setTimeout(() => setBlink(false), 110)
-        loop()
-      }, 2800 + Math.random() * 4200)
-    }
-    loop()
-    return () => clearTimeout(t)
-  }, [reduce, asleep])
-
-  return (
-    <svg width={size} height={size} viewBox="0 0 48 48" fill="none" aria-hidden="true">
-      {/* Orbital ring — he is an instrument in the lab. */}
-      <motion.g
-        animate={reduce ? {} : { rotate: 360 }}
-        transition={{ duration: 16, repeat: Infinity, ease: 'linear' }}
-        style={{ originX: '50%', originY: '50%' }}
-      >
-        <ellipse cx="24" cy="24" rx="21.5" ry="8.5" stroke={accent} strokeOpacity="0.32" strokeWidth="1" transform="rotate(-22 24 24)" />
-        <circle cx="44.5" cy="16.5" r="1.7" fill={accent} opacity="0.9" />
-      </motion.g>
-
-      {/* Tail */}
-      <motion.path
-        d="M13 30.5c-4.2 1.4-6.3 4-5.8 7.2 2.6-1.6 5.2-2.6 7.8-2.6"
-        stroke={accent}
-        strokeWidth="1.7"
-        strokeLinecap="round"
-        fill="none"
-        animate={reduce ? {} : { rotate: mood === 'pleased' ? [0, -16, 0, 12, 0] : [0, -8, 0, 6, 0] }}
-        transition={{ duration: mood === 'pleased' ? 1.6 : 4.4, repeat: Infinity, ease: 'easeInOut' }}
-        style={{ originX: '15px', originY: '30px' }}
-      />
-
-      <motion.g
-        animate={
-          reduce
-            ? {}
-            : mood === 'thinking'
-              ? { rotate: [0, -5, 3, 0] }
-              : mood === 'alert'
-                ? { y: [0, -1.6, 0] }
-                : {}
-        }
-        transition={{ duration: mood === 'thinking' ? 2.4 : 1.9, repeat: Infinity, ease: 'easeInOut' }}
-        style={{ originX: '24px', originY: '26px' }}
-      >
-        {/* Tall cat ears. They flatten when wary and droop when asleep. */}
-        <motion.path
-          d="M15.8 19.8 13.2 10.4l8.4 5.2"
-          fill={accent}
-          fillOpacity="0.92"
-          animate={reduce ? {} : { rotate: mood === 'wary' ? -26 : asleep ? -14 : 0 }}
-          transition={{ type: 'spring', duration: 0.5, bounce: 0.25 }}
-          style={{ originX: '17px', originY: '19px' }}
-        />
-        <motion.path
-          d="M32.2 19.8 34.8 10.4l-8.4 5.2"
-          fill={accent}
-          fillOpacity="0.92"
-          animate={reduce ? {} : { rotate: mood === 'wary' ? 26 : asleep ? 14 : 0 }}
-          transition={{ type: 'spring', duration: 0.5, bounce: 0.25 }}
-          style={{ originX: '31px', originY: '19px' }}
-        />
-        {/* Head — rounder and wider than a fox's, machined from one plate. */}
-        <path
-          d="M24 14.6c6.9 0 10.6 4.3 10.6 9.7 0 5.9-4.7 9.8-10.6 9.8S13.4 30.2 13.4 24.3c0-5.4 3.7-9.7 10.6-9.7Z"
-          fill="rgb(var(--ink-800))"
-          stroke={accent}
-          strokeWidth="1.5"
-        />
-        <path d="M17.2 20.9h13.6" stroke={accent} strokeOpacity="0.26" strokeWidth="0.9" />
-
-        {/* Eyes. Closed arcs when asleep, otherwise blinking discs. */}
-        {asleep ? (
-          <g>
-            <path d="M18.2 24.6q2.1 1.9 4.2 0" stroke={accent} strokeWidth="1.5" strokeLinecap="round" fill="none" />
-            <path d="M25.6 24.6q2.1 1.9 4.2 0" stroke={accent} strokeWidth="1.5" strokeLinecap="round" fill="none" />
-          </g>
-        ) : (
-          <motion.g animate={{ scaleY: blink ? 0.1 : 1 }} transition={{ duration: 0.09 }} style={{ originY: '24.2px' }}>
-            <circle cx="20.1" cy="24.2" r="1.85" fill={accent} />
-            <circle cx="27.9" cy="24.2" r="1.85" fill={accent} />
-          </motion.g>
-        )}
-
-        {/* Muzzle and whiskers — the cat tell. */}
-        <path d="M24 27.4v1.7" stroke={accent} strokeOpacity="0.6" strokeWidth="1.3" strokeLinecap="round" />
-        <path d="M22.6 30.2q1.4 1.2 2.8 0" stroke={accent} strokeOpacity="0.75" strokeWidth="1.2" strokeLinecap="round" fill="none" />
-        <g stroke={accent} strokeOpacity="0.42" strokeWidth="0.85" strokeLinecap="round">
-          <path d="M13.6 27.4 8.8 26.4M13.6 29.2l-4.4 1.3" />
-          <path d="M34.4 27.4l4.8-1M34.4 29.2l4.4 1.3" />
-        </g>
-
-        {/* Sleep marks. */}
-        {asleep && !reduce && (
-          <motion.g
-            animate={{ opacity: [0, 1, 0], y: [0, -5, -9] }}
-            transition={{ duration: 3.4, repeat: Infinity, ease: 'easeOut' }}
-          >
-            <text x="35" y="14" fontSize="7" fontFamily="var(--font-mono), monospace" fill={accent} opacity="0.8">
-              z
-            </text>
-          </motion.g>
-        )}
-      </motion.g>
-    </svg>
-  )
-}
 
 /* ------------------------------------------------------------------ */
 
@@ -167,10 +44,17 @@ export function Milo({
   ventureId,
   context,
   mood = 'idle',
+  ask,
 }: {
   ventureId: string
   context?: string
   mood?: MiloMood
+  /**
+   * A request from the page: "ask Milo about this". `about` is either an
+   * action id or `explain:<subject>`. `at` is a timestamp, so asking the same
+   * thing twice still fires.
+   */
+  ask?: { about: string; at: number } | null
 }) {
   const reduce = useReducedMotion()
   const [open, setOpen] = useState(false)
@@ -200,9 +84,54 @@ export function Milo({
     }
   }, [calm])
 
+  /*
+    Taming. Hovering over him builds trust and decays when you leave him alone.
+    Past 0.55 he purrs; past 0.75 his tail goes up and he stops fleeing the
+    cursor, because a cat that knows you does not run away. Bonding is
+    remembered so he greets you already friendly next time.
+  */
+  const trust = useRef(0)
+  const [bonded, setBonded] = useState(false)
+  useEffect(() => {
+    try {
+      if (localStorage.getItem('va_milo_bond') === '1') {
+        trust.current = 0.8
+        setBonded(true)
+      }
+    } catch {
+      /* private mode — he starts shy every time */
+    }
+  }, [])
+
+  useEffect(() => {
+    let raf = 0
+    let last = performance.now()
+    const tick = (now: number) => {
+      raf = requestAnimationFrame(tick)
+      const dt = Math.min(0.05, (now - last) / 1000)
+      last = now
+      // Decays slowly; petting is handled by the pointer handlers below.
+      trust.current = Math.max(bonded ? 0.7 : 0, trust.current - dt * 0.06)
+    }
+    raf = requestAnimationFrame(tick)
+    return () => cancelAnimationFrame(raf)
+  }, [bonded])
+
+  const pet = useCallback(() => {
+    trust.current = Math.min(1, trust.current + 0.05)
+    if (trust.current > 0.9 && !bonded) {
+      setBonded(true)
+      try {
+        localStorage.setItem('va_milo_bond', '1')
+      } catch {
+        /* nothing to persist to */
+      }
+    }
+  }, [bonded])
+
   // Reduced motion pins him too, and the room being open stops him wandering
   // out from under his own panel.
-  const roam = useMiloRoam({ calm: calm || Boolean(reduce), paused: open })
+  const roam = useMiloRoam({ calm: calm || Boolean(reduce), paused: open, trust })
 
   const effectiveMood: MiloMood = busy ? 'thinking' : mood
   const displayMood: MiloMood = busy ? 'thinking' : roam.state === 'sleeping' ? 'asleep' : mood
@@ -279,6 +208,29 @@ export function Milo({
     setError(null)
   }
 
+  /*
+    "Ask Milo about this" from anywhere on the page. He opens, and either runs
+    the named action or asks about the named subject in plain words — so the
+    answer always arrives in the same conversation rather than a side channel.
+  */
+  const lastAsk = useRef(0)
+  useEffect(() => {
+    if (!ask || ask.at === lastAsk.current) return
+    lastAsk.current = ask.at
+    setOpen(true)
+    const [head, ...rest] = ask.about.split(':')
+    const subject = rest.join(':')
+    if (head === 'explain' && subject) {
+      void send({ prompt: `Explain "${subject}" in this venture: what it means here, how strong the evidence is, and what I should do about it next.` })
+    } else if (ACTION_LABEL[ask.about]) {
+      void send({ action: ask.about })
+    } else {
+      void send({ prompt: ask.about })
+    }
+    // `send` is stable enough for this: it only reads refs and setters.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [ask])
+
   const suggested = context ? ACTIONS.filter((a) => a.when?.includes(context)) : []
   const others = ACTIONS.filter((a) => !suggested.includes(a))
 
@@ -294,28 +246,30 @@ export function Milo({
         className="no-print pointer-events-none fixed left-0 top-0 z-40"
         style={{ willChange: 'transform' }}
       >
-        <motion.button
+        {/*
+          No disc around him — he is a creature standing on the page, not an
+          icon in a bubble. The button is the cat.
+        */}
+        <button
           ref={triggerRef}
           type="button"
           onClick={() => setOpen((o) => !o)}
+          onPointerEnter={pet}
+          onPointerMove={pet}
           aria-expanded={open}
           aria-haspopup="dialog"
           aria-label={open ? 'Close the Founder Room' : 'Open the Founder Room with Milo'}
-          className="pointer-events-auto flex h-[60px] w-[60px] cursor-pointer items-center justify-center rounded-full border border-[rgb(var(--paper)/0.16)] bg-[rgb(var(--ink-700)/0.9)] backdrop-blur-md transition-colors duration-200 ease-out hover:border-action/50"
-          animate={reduce || roam.state === 'sleeping' ? {} : { y: [0, -5, 0] }}
-          transition={{ duration: 5.4, repeat: Infinity, ease: 'easeInOut' }}
-          whileTap={{ scale: 0.94 }}
-          style={{ boxShadow: 'var(--shadow-lift)' }}
+          className="tap pointer-events-auto relative flex cursor-pointer items-center justify-center rounded-full transition-transform duration-200 ease-out active:scale-95"
         >
-          <MiloFox mood={displayMood} />
+          <MiloCat motion={roam.motion} mood={displayMood} trust={trust} />
           {effectiveMood === 'wary' && !open && (
             <span
               aria-hidden="true"
-              className="absolute right-1 top-1 h-2 w-2 rounded-full bg-risk"
-              style={{ boxShadow: '0 0 0 3px rgb(var(--ink-700))' }}
+              className="absolute -top-1 right-2 h-2.5 w-2.5 rounded-full bg-risk"
+              style={{ boxShadow: '0 0 0 3px rgb(var(--ink-800))' }}
             />
           )}
-        </motion.button>
+        </button>
 
         {/* Calm mode: parks him in the corner for good. */}
         {!open && (
@@ -346,7 +300,7 @@ export function Milo({
           >
             <header className="flex shrink-0 items-center justify-between gap-3 border-b border-[color:var(--rule)] px-4 py-3">
               <div className="flex items-center gap-2.5">
-                <MiloFox mood={effectiveMood} size={28} />
+                <MiloCat motion={roam.motion} mood={effectiveMood} trust={trust} size={44} />
                 <div>
                   <p className="text-[13.5px] leading-tight text-paper">Founder Room</p>
                   <p className="text-[11px] leading-tight text-paper-sub">
