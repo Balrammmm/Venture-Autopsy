@@ -37,10 +37,15 @@ export interface Knobs {
   retention: number
 }
 
+/**
+ * INR values converted from the earlier GBP scenarios at ₹108/£. Keeping the
+ * same ratio preserves the model's economics while making the simulator useful
+ * for an Indian founder.
+ */
 const PRESETS: Record<Scenario, Partial<Knobs>> = {
-  lean: { reach: 120, conversion: 0.04, price: 19, serve: 4, fixed: 400, retention: 0.82 },
-  balanced: { reach: 400, conversion: 0.06, price: 29, serve: 6, fixed: 1200, retention: 0.88 },
-  ambitious: { reach: 1500, conversion: 0.09, price: 39, serve: 9, fixed: 4200, retention: 0.92 },
+  lean: { reach: 120, conversion: 0.04, price: 2052, serve: 432, fixed: 43200, retention: 0.82 },
+  balanced: { reach: 400, conversion: 0.06, price: 3132, serve: 648, fixed: 129600, retention: 0.88 },
+  ambitious: { reach: 1500, conversion: 0.09, price: 4212, serve: 972, fixed: 453600, retention: 0.92 },
 }
 
 export interface Derived {
@@ -69,7 +74,9 @@ export function derive(k: Knobs): Derived {
 }
 
 const money = (n: number) =>
-  Number.isFinite(n) ? `£${Math.round(n).toLocaleString()}` : '—'
+  Number.isFinite(n)
+    ? new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(Math.round(n))
+    : '—'
 
 /* ------------------------------------------------------------------ *
  * Stages
@@ -118,9 +125,9 @@ const STAGES: Stage[] = [
     blurb: 'What one customer pays each month.',
     knob: 'price',
     format: (k) => `${money(k.price)} / month`,
-    min: 1,
-    max: 500,
-    step: 1,
+    min: 100,
+    max: 54000,
+    step: 100,
   },
   {
     id: 'revenue',
@@ -135,8 +142,8 @@ const STAGES: Stage[] = [
     knob: 'serve',
     format: (k) => `${money(k.serve)} / customer`,
     min: 0,
-    max: 300,
-    step: 1,
+    max: 32400,
+    step: 100,
   },
   {
     id: 'fixed',
@@ -145,8 +152,8 @@ const STAGES: Stage[] = [
     knob: 'fixed',
     format: (k) => `${money(k.fixed)} / month`,
     min: 0,
-    max: 20000,
-    step: 100,
+    max: 2160000,
+    step: 1000,
   },
   {
     id: 'retention',
@@ -185,7 +192,7 @@ export function ModelMachine({
   // The knobs are the founder's working assumptions, so they persist.
   useEffect(() => {
     try {
-      const raw = localStorage.getItem(`va_model_${ventureId}`)
+      const raw = localStorage.getItem(`va_model_inr_v1_${ventureId}`)
       if (raw) {
         const saved = JSON.parse(raw)
         if (saved.knobs) setKnobs(saved.knobs)
@@ -198,7 +205,7 @@ export function ModelMachine({
 
   useEffect(() => {
     try {
-      localStorage.setItem(`va_model_${ventureId}`, JSON.stringify({ knobs, scenario }))
+      localStorage.setItem(`va_model_inr_v1_${ventureId}`, JSON.stringify({ knobs, scenario }))
     } catch {
       /* nothing to persist to */
     }
