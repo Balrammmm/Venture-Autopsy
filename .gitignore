@@ -11,3 +11,6 @@ prisma/dev.db*
 
 # Build caches
 *.tsbuildinfo
+
+.vercel
+.env*
