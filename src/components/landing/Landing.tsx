@@ -305,7 +305,7 @@ function LandingInner() {
 
           <div className="kt-block mt-9 flex flex-wrap items-center gap-3" style={{ animationDelay: '0.58s' }}>
             <PrimaryCta onClick={() => router.push(startHref)}>Engineer an idea</PrimaryCta>
-            <SecondaryCta onClick={() => router.push('/onboarding?demo=1')}>Worked example</SecondaryCta>
+            <SecondaryCta onClick={() => router.push('/demo')}>Worked example</SecondaryCta>
           </div>
 
           <p
@@ -427,7 +427,7 @@ function LandingInner() {
 
           <div className="mt-9 flex flex-wrap items-center gap-3">
             <PrimaryCta onClick={() => router.push(startHref)}>Start your venture</PrimaryCta>
-            <SecondaryCta onClick={() => router.push('/onboarding?demo=1')}>See a worked example</SecondaryCta>
+            <SecondaryCta onClick={() => router.push('/demo')}>See a worked example</SecondaryCta>
           </div>
 
           {/*

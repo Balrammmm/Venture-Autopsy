@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from 'next'
 import { Archivo, Instrument_Serif, JetBrains_Mono } from 'next/font/google'
 import '@/styles/globals.css'
+import '@/styles/investigation.css'
 import { themeScript } from '@/components/landing/theme/theme-script'
 import { ThemeProvider } from '@/components/landing/theme/ThemeProvider'
 

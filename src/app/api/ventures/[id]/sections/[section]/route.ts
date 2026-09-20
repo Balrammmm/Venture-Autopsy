@@ -1,3 +1,5 @@
+import { saveAnalysisVersion } from '@/lib/save-analysis'
+import { validatedSections } from '@/lib/validate-analysis'
 import { z } from 'zod'
 import { db } from '@/lib/db'
 import { requireVenture } from '@/lib/auth'
@@ -71,32 +73,7 @@ export async function POST(req: Request, ctx: { params: Promise<{ id: string; se
         ? 'user_provided'
         : 'hypothesis'
 
-    await db.analysis.updateMany({ where: { ventureId: id, section, isCurrent: true }, data: { isCurrent: false } })
-    const created = await db.analysis.create({
-      data: {
-        ventureId: id,
-        section,
-        data: JSON.stringify(data),
-        evidence,
-        version: (current?.version ?? 0) + 1,
-        isCurrent: true,
-        model: process.env.GEMINI_MODEL || 'gemini-2.5-flash',
-      },
-    })
-
-    // The verdict drives the venture headline state everywhere else in the app.
-    if (section === 'verdict') {
-      const v = data as { verdict?: string; confidence?: string; healthScore?: number }
-      await db.venture.update({
-        where: { id },
-        data: {
-          verdict: v.verdict,
-          confidence: v.confidence,
-          healthScore: Math.min(100, Math.max(0, v.healthScore ?? venture.healthScore)),
-          accent: v.verdict === 'High Risk' ? 'ember' : 'lime',
-        },
-      })
-    }
+    const created = await saveAnalysisVersion(id, section, data, evidence, process.env.GEMINI_MODEL || 'gemini-2.5-flash')
 
     return ok({ section, data, version: created.version, evidence })
   } catch (err) {
@@ -110,22 +87,12 @@ export async function PUT(req: Request, ctx: { params: Promise<{ id: string; sec
     const { id, section } = await ctx.params
     assertSection(section)
     await requireVenture(id)
-    const { data } = Put.parse(await readJson(req))
+    const supplied = Put.parse(await readJson(req))
+    const data = validatedSections[section].parse(supplied.data)
     if (data === null || data === undefined) return fail('No section data supplied.', 422)
 
     const current = await db.analysis.findFirst({ where: { ventureId: id, section, isCurrent: true } })
-    await db.analysis.updateMany({ where: { ventureId: id, section, isCurrent: true }, data: { isCurrent: false } })
-    const created = await db.analysis.create({
-      data: {
-        ventureId: id,
-        section,
-        data: JSON.stringify(data),
-        evidence: current?.evidence ?? 'hypothesis',
-        version: (current?.version ?? 0) + 1,
-        isCurrent: true,
-        model: 'founder-edit',
-      },
-    })
+    const created = await saveAnalysisVersion(id, section, data, current?.evidence ?? 'hypothesis', 'founder-edit')
     return ok({ section, data, version: created.version })
   } catch (err) {
     return handle(err)

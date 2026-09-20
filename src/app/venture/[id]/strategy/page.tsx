@@ -64,6 +64,7 @@ function StrategyPage({ id }: { id: string }) {
         <ErrorNote className="mt-6" message={v.actionError.message} hint={v.actionError.hint} onRetry={v.clearActionError} />
       )}
 
+      <header className="case-page-intro"><span className="micro">04 / STRATEGY ROOM</span><h1>Every choice has a cost.</h1><p>Stress-test your business model, compare conditional futures, and turn the strongest hypothesis into a plan.</p></header>
       {/*
         The machine is the page's focal system: seven wired stages where a
         change to one visibly travels through the rest. The blueprint below is

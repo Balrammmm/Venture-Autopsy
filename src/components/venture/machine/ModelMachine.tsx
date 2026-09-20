@@ -256,7 +256,7 @@ export function ModelMachine({
           </button>
         ))}
         <span className="ml-auto font-mono text-[10px] uppercase tracking-[0.14em] text-unknown">
-          all figures are hypotheses
+          Illustrative inputs · not venture findings
         </span>
       </div>
 

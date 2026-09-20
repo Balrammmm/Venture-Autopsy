@@ -1,7 +1,7 @@
 import { z } from 'zod'
 import { db } from '@/lib/db'
 import { requireVenture } from '@/lib/auth'
-import { handle, ok } from '@/lib/api'
+import { handle, ok, fail } from '@/lib/api'
 import { BURST, burst, readJson, spendModelCall } from '@/lib/limits'
 import { evidenceBlock, founderBlock, generateAtlas, runResearchPass } from '@/lib/gemini'
 import { SECTION_KEYS } from '@/lib/atlas-types'
@@ -22,9 +22,13 @@ export async function POST(req: Request, ctx: { params: Promise<{ id: string }> 
   // allowed to move it back; a rate-limited call must not downgrade a venture
   // that is already analysed.
   let marked = false
+  let previousStage = "captured"
   try {
     const { user, venture } = await requireVenture(id)
     const body = Body.parse(await readJson(req))
+    previousStage = venture.stage
+    if (venture.stage === 'analysing') return fail('An investigation is already running.', 409, 'Wait for the current analysis to finish.')
+    if (await db.analysis.count({ where: { ventureId: id, isCurrent: true } })) return fail('This venture already has an analysis.', 409, 'Regenerate individual modules to preserve your experiment results and working assumptions.')
 
     // Burst first, then the daily allowance. Both are charged before the model
     // is called, so a failed generation cannot be used to farm free retries.
@@ -32,7 +36,8 @@ export async function POST(req: Request, ctx: { params: Promise<{ id: string }> 
     await spendModelCall(user.id)
     if (body.research) await spendModelCall(user.id)
 
-    await db.venture.update({ where: { id }, data: { stage: 'analysing' } })
+    const lock = await db.venture.updateMany({ where: { id, stage: { not: 'analysing' } }, data: { stage: 'analysing' } })
+    if (!lock.count) return fail('An investigation is already running.', 409)
     marked = true
 
     let researchSummary: string | undefined
@@ -86,8 +91,7 @@ export async function POST(req: Request, ctx: { params: Promise<{ id: string }> 
     // Replace the previous atlas atomically rather than leaving a half-written one.
     await db.$transaction(async (tx) => {
       await tx.analysis.updateMany({ where: { ventureId: id, isCurrent: true }, data: { isCurrent: false } })
-      await tx.assumption.deleteMany({ where: { ventureId: id } })
-      await tx.experiment.deleteMany({ where: { ventureId: id } })
+      // Keep any founder-authored working records captured before the first analysis.
 
       for (const key of SECTION_KEYS) {
         const prior = await tx.analysis.findFirst({
@@ -109,6 +113,8 @@ export async function POST(req: Request, ctx: { params: Promise<{ id: string }> 
 
       const byClaim: Record<string, string> = {}
       for (const a of atlas.assumptions) {
+        const existing = await tx.assumption.findFirst({ where: { ventureId: id, claim: a.claim } })
+        if (existing) { byClaim[a.claim] = existing.id; continue }
         const row = await tx.assumption.create({
           data: {
             ventureId: id,
@@ -130,6 +136,7 @@ export async function POST(req: Request, ctx: { params: Promise<{ id: string }> 
       }
 
       for (const e of atlas.experiments) {
+        if (await tx.experiment.findFirst({ where: { ventureId: id, name: e.name } })) continue
         await tx.experiment.create({
           data: {
             ventureId: id,
@@ -164,7 +171,7 @@ export async function POST(req: Request, ctx: { params: Promise<{ id: string }> 
     return ok({ ok: true, ventureId: id, grounded: groundedCount, researched: body.research === true })
   } catch (err) {
     // Never strand a venture in "analysing" — the library would show a spinner forever.
-    if (marked) await db.venture.update({ where: { id }, data: { stage: 'captured' } }).catch(() => {})
+    if (marked) await db.venture.update({ where: { id }, data: { stage: previousStage } }).catch(() => {})
     return handle(err)
   }
 }

@@ -2,6 +2,7 @@
 
 import { use, useState } from 'react'
 import { AppShell, useSession } from '@/components/AppShell'
+import { Milo } from '@/components/venture/Milo'
 import { VentureNav } from '@/components/venture/Chrome'
 import { useVenture } from '@/components/venture/useVenture'
 import { Presentation } from '@/components/venture/report/Presentation'
@@ -10,7 +11,7 @@ import { Button, ErrorNote, EvidenceTag, IconDownload, IconLayers, IconPrint, In
 
 function Section({ title, children, breakBefore }: { title: string; children: React.ReactNode; breakBefore?: boolean }) {
   return (
-    <section className={`rule-t py-8 print-plain ${breakBefore ? 'print-break' : ''}`}>
+    <section data-milo-target={title.toLowerCase().replace(/[^a-z0-9]+/g, "-")} data-milo-title={title} data-milo-section="report" className={`rule-t py-8 print-plain ${breakBefore ? 'print-break' : ''}`}>
       <h2 className="display mb-5 text-[1.55rem] leading-tight text-paper print-plain">{title}</h2>
       {children}
     </section>
@@ -321,6 +322,7 @@ function ReportPage({ id }: { id: string }) {
           </p>
         </footer>
       </article>
+      <Milo ventureId={id} context="report" />
     </AppShell>
   )
 }

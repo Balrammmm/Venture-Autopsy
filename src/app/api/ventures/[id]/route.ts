@@ -26,10 +26,10 @@ export async function GET(_req: Request, ctx: { params: Promise<{ id: string }> 
     ])
 
     const sections: Partial<Record<SectionKey, unknown>> = {}
-    const sectionMeta: Record<string, { version: number; evidence: string; updatedAt: Date }> = {}
+    const sectionMeta: Record<string, { version: number; evidence: string; model: string; updatedAt: Date }> = {}
     for (const a of analyses) {
       sections[a.section as SectionKey] = parseData(a.data, null)
-      sectionMeta[a.section] = { version: a.version, evidence: a.evidence, updatedAt: a.createdAt }
+      sectionMeta[a.section] = { version: a.version, evidence: a.evidence, model: a.model ?? 'unknown', updatedAt: a.createdAt }
     }
 
     return ok({

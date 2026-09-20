@@ -46,7 +46,7 @@ export function IdeaGenome({ genome }: { genome: Genome }) {
         <svg
           viewBox="0 0 320 320"
           className="w-full max-w-[380px]"
-          role="img"
+          role="group"
           aria-label="The six parts of the idea arranged in an orbit. Each part is listed beside this diagram."
         >
           <circle cx="160" cy="160" r="150" fill="none" stroke="var(--rule)" strokeDasharray="1 8" />
@@ -90,7 +90,7 @@ export function IdeaGenome({ genome }: { genome: Genome }) {
             const on = n.id === active
             const weak = n.strength <= 2
             return (
-              <g key={n.id} className="cursor-pointer" onClick={() => setActive(n.id)}>
+              <g key={n.id} role="button" tabIndex={0} aria-label={n.label} aria-pressed={active === n.id} className="cursor-pointer" onKeyDown={e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); setActive(n.id) } }} onClick={() => setActive(n.id)}>
                 <circle cx={n.x} cy={n.y} r={on ? 19 : 15} fill="rgb(var(--ink-800))" stroke={weak ? 'rgb(var(--risk))' : 'rgb(var(--action-text))'} strokeWidth={on ? 2 : 1.2} />
                 <circle cx={n.x} cy={n.y} r={on ? 7 : 5} fill={weak ? 'rgb(var(--risk))' : 'rgb(var(--action-text))'} fillOpacity={on ? 1 : 0.65} />
                 <text
@@ -228,8 +228,7 @@ export function AssumptionMinefield({
 
   async function save() {
     if (!current) return
-    await onUpdate(current.id, draft)
-    setEditing(false)
+    if (await onUpdate(current.id, draft)) setEditing(false)
   }
 
   return (
@@ -239,7 +238,7 @@ export function AssumptionMinefield({
         <svg
           viewBox="0 0 420 340"
           className="w-full"
-          role="img"
+          role="group"
           aria-label="Assumptions plotted by uncertainty against impact. Every assumption is also listed beside this chart."
         >
           <defs>
@@ -276,7 +275,7 @@ export function AssumptionMinefield({
             const fill = a.status === 'supported' ? 'rgb(var(--action-text))' : danger ? 'rgb(var(--risk))' : 'rgb(var(--action-text))'
 
             return (
-              <g key={a.id} className="cursor-pointer" onClick={() => setActive(a.id)}>
+              <g key={a.id} role="button" tabIndex={0} aria-label={a.claim} aria-pressed={active === a.id} className="cursor-pointer" onKeyDown={e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); setActive(a.id) } }} onClick={() => setActive(a.id)}>
                 {on && !reduce && (
                   <circle cx={cx} cy={cy} r={r + 10} fill="none" stroke={fill} strokeOpacity="0.4">
                     <animate attributeName="r" values={`${r + 6};${r + 14};${r + 6}`} dur="2.6s" repeatCount="indefinite" />

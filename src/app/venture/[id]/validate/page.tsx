@@ -142,7 +142,7 @@ function ValidatePage({ id }: { id: string }) {
         dangerous, and the rigs below it are what you put them into. The
         editable list further down stays, because that is where rows are made.
       */}
-      <section className="rule-b py-10 md:py-12">
+      <section id="validation-lab" data-milo-target="validation-lab" data-milo-title="Validation lab" data-milo-section="validate" className="rule-b py-10 md:py-12">
         <div className="mb-6">
           <h1 className="display text-[clamp(1.9rem,4vw,2.9rem)] leading-[1.02] text-paper">Validation Lab</h1>
           <p className="mt-2 max-w-measure text-[13.5px] text-paper-faint">
@@ -159,7 +159,7 @@ function ValidatePage({ id }: { id: string }) {
         />
       </section>
 
-      <section className="py-12 md:py-16">
+      <section id="experiment-records" data-milo-target="experiment-records" data-milo-title="Experiment results" data-milo-section="validate" className="py-12 md:py-16">
         <div className="mb-8 flex flex-wrap items-end justify-between gap-x-6 gap-y-4">
           <div>
             <h2 className="display text-[clamp(1.6rem,3vw,2.2rem)] leading-[1.02] text-paper">Experiment records</h2>

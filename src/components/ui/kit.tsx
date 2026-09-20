@@ -122,7 +122,7 @@ export function Chip({
     )
   }
   return (
-    <button type="button" onClick={onClick} disabled={disabled} title={title} className={cls}>
+    <button type="button" onClick={onClick} disabled={disabled} title={title} aria-pressed={active} className={cls}>
       {children}
     </button>
   )

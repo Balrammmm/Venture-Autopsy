@@ -23,7 +23,7 @@ export function MarketTerrain({ market }: { market: MarketTerrainData }) {
           <svg
             viewBox="0 0 480 300"
             className="w-full"
-            role="img"
+            role="group"
             aria-label="A landscape with the personas placed on it. Each persona is also listed beside this diagram."
           >
             <defs>
@@ -69,7 +69,7 @@ export function MarketTerrain({ market }: { market: MarketTerrainData }) {
               const cy = 176 + Math.min(0.94, Math.max(0.06, p.y)) * 104
               const on = p.id === active
               return (
-                <g key={p.id} className="cursor-pointer" onClick={() => setActive(p.id)}>
+                <g key={p.id} role="button" tabIndex={0} aria-label={p.name} aria-pressed={active === p.id} className="cursor-pointer" onKeyDown={e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); setActive(p.id) } }} onClick={() => setActive(p.id)}>
                   {/* A standing figure, drawn rather than a dot. */}
                   <line x1={cx} y1={cy} x2={cx} y2={cy - 22} stroke={on ? 'rgb(var(--action-text))' : 'rgb(var(--paper)/0.5)'} strokeWidth={on ? 2.4 : 1.5} strokeLinecap="round" />
                   <circle cx={cx} cy={cy - 28} r={on ? 6.5 : 5} fill={on ? 'rgb(var(--action-text))' : 'rgb(var(--ink-800))'} stroke={on ? 'rgb(var(--action-text))' : 'rgb(var(--paper)/0.5)'} strokeWidth="1.5" />

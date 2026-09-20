@@ -5,6 +5,7 @@ import { AppShell, useSession } from '@/components/AppShell'
 import { ModuleEmpty, ModuleFrame, VentureNav } from '@/components/venture/Chrome'
 import { MarketTerrain } from '@/components/venture/modules/MarketTerrain'
 import { Observatory } from '@/components/venture/observatory/Observatory'
+import { MarketIntelligence } from '@/components/venture/investigation/MarketIntelligence'
 import { Milo } from '@/components/venture/Milo'
 import { useVenture } from '@/components/venture/useVenture'
 import {
@@ -113,6 +114,8 @@ function ResearchPage({ id }: { id: string }) {
         <ErrorNote className="mt-6" message={v.actionError.message} hint={v.actionError.hint} onRetry={v.clearActionError} />
       )}
 
+      <MarketIntelligence data={v.data} />
+      <details className="case-advanced"><summary>Open the evidence constellation and terrain</summary>
       {/*
         The observatory is this page's focal system: everything collected, laid
         out as a field with the gaps visible. The terrain and the desk below it
@@ -155,8 +158,9 @@ function ResearchPage({ id }: { id: string }) {
         )}
       </ModuleFrame>
 
+      </details>
       {/* Evidence desk */}
-      <section id="evidence" className="rule-t scroll-mt-28 py-12 md:py-16">
+      <section data-milo-target="evidence" data-milo-title="Collected evidence" data-milo-section="research" id="evidence" className="rule-t scroll-mt-28 py-12 md:py-16">
         <div className="mb-7 flex flex-wrap items-end justify-between gap-x-6 gap-y-3">
           <div>
             <h2 className="display text-[clamp(1.7rem,3.2vw,2.5rem)] leading-[1.02] text-paper">Evidence desk</h2>

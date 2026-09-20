@@ -32,6 +32,8 @@ export function AppShell({
   const router = useRouter()
   const pathname = usePathname()
   const [signingOut, setSigningOut] = useState(false)
+  const ventureId = pathname.match(/^\/venture\/([^/]+)/)?.[1]
+  const caseRoutes = [['', 'Investigation', 'The diagnosis & anatomy'], ['/research', 'Market intelligence', 'Sources, signals & gaps'], ['/validate', 'Validation lab', 'Turn uncertainty into proof'], ['/strategy', 'Strategy room', 'Model the way forward'], ['/report', 'Case report', 'The complete record']]
 
   async function signOut() {
     setSigningOut(true)
@@ -45,7 +47,7 @@ export function AppShell({
   }
 
   return (
-    <div className="grain relative min-h-screen bg-ink-800">
+    <div className={`${ventureId ? 'case-shell' : 'grain'} relative min-h-screen bg-ink-800`}>
       <div className="grid-field pointer-events-none absolute inset-0 opacity-25" aria-hidden="true" />
 
       <header className="no-print sticky top-0 z-40 border-b border-[color:var(--rule)] bg-[rgb(var(--ink-800)/0.85)] backdrop-blur-xl">
@@ -83,6 +85,7 @@ export function AppShell({
         </div>
       </header>
 
+      {ventureId && <aside className="case-sidebar no-print"><Link href="/ventures" className="case-back">← All ventures</Link><p className="micro">THE INVESTIGATION</p><nav aria-label="Case navigation">{caseRoutes.map(([suffix, label, desc], i) => <Link key={suffix} href={`/venture/${ventureId}${suffix}`} aria-current={pathname === `/venture/${ventureId}${suffix}` ? 'page' : undefined}><span className="case-nav-number">0{i + 1}</span><span>{label}<small>{desc}</small></span></Link>)}</nav><div className="sidebar-note"><span className="status-dot" /><span>Evidence before conviction.<small>Your private venture laboratory.</small></span></div></aside>}
       <main id="main" className={`relative mx-auto px-4 md:px-8 ${wide ? 'max-w-[1700px]' : 'max-w-[1500px]'}`}>
         {children}
       </main>

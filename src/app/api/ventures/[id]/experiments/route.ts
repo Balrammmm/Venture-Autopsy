@@ -1,7 +1,7 @@
 import { z } from 'zod'
 import { db } from '@/lib/db'
 import { requireVenture } from '@/lib/auth'
-import { handle, ok, parseData } from '@/lib/api'
+import { handle, ok, fail, parseData } from '@/lib/api'
 import { readJson } from '@/lib/limits'
 
 const Create = z.object({
@@ -34,6 +34,7 @@ export async function POST(req: Request, ctx: { params: Promise<{ id: string }> 
     const { id } = await ctx.params
     await requireVenture(id)
     const body = Create.parse(await readJson(req))
+    if (body.assumptionId && !await db.assumption.findFirst({ where: { id: body.assumptionId, ventureId: id } })) return fail('The linked assumption does not belong to this venture.', 422)
     const created = await db.experiment.create({
       data: { ...body, ventureId: id, script: JSON.stringify(body.script), assumptionId: body.assumptionId || null },
     })

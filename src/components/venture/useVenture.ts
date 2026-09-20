@@ -88,7 +88,7 @@ export interface Sections {
 export interface VentureBundle {
   venture: VentureRow
   sections: Sections
-  sectionMeta: Record<string, { version: number; evidence: string; updatedAt: string }>
+  sectionMeta: Record<string, { version: number; evidence: string; model?: string; updatedAt: string }>
   assumptions: AssumptionRow[]
   experiments: ExperimentRow[]
   sources: SourceRow[]
@@ -107,16 +107,18 @@ export function useVenture(id: string) {
   const [analysing, setAnalysing] = useState(false)
   const [actionError, setActionError] = useState<ApiError | null>(null)
   const alive = useRef(true)
+  const loadSequence = useRef(0)
 
   const load = useCallback(async () => {
+    const sequence = ++loadSequence.current
     setError(null)
     try {
       const bundle = await api<VentureBundle>(`/api/ventures/${id}`)
-      if (alive.current) setData(bundle)
+      if (alive.current && sequence === loadSequence.current) setData(bundle)
     } catch (err) {
-      if (alive.current) setError(err as ApiError)
+      if (alive.current && sequence === loadSequence.current) setError(err as ApiError)
     } finally {
-      if (alive.current) setLoading(false)
+      if (alive.current && sequence === loadSequence.current) setLoading(false)
     }
   }, [id])
 
@@ -126,6 +128,7 @@ export function useVenture(id: string) {
     load()
     return () => {
       alive.current = false
+      loadSequence.current++
     }
   }, [load])
 

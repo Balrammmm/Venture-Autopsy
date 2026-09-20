@@ -14,6 +14,7 @@ import {
   Textarea,
 } from '@/components/ui/kit'
 import type { SectionKey } from '@/lib/atlas-types'
+import { ExplainButton } from './investigation/Explain'
 
 const TABS = [
   { href: '', label: 'Command' },
@@ -28,7 +29,7 @@ export function VentureNav({ id }: { id: string }) {
   const base = `/venture/${id}`
 
   return (
-    <nav aria-label="Venture sections" className="no-print flex gap-x-1 overflow-x-auto">
+    <nav aria-label="Venture sections" className="venture-nav no-print flex gap-x-1 overflow-x-auto">
       {TABS.map((t) => {
         const href = base + t.href
         const active = pathname === href
@@ -90,7 +91,7 @@ export function ModuleFrame({
   const [instruction, setInstruction] = useState('')
 
   return (
-    <section id={id} aria-labelledby={`${id}-heading`} className={`scroll-mt-28 py-12 md:py-16 ${className}`}>
+    <section id={id} data-milo-target={id} data-milo-title={name} data-milo-section={id} aria-labelledby={`${id}-heading`} className={`case-module scroll-mt-28 py-12 md:py-16 ${className}`}>
       <div className="mb-7 flex flex-wrap items-end justify-between gap-x-6 gap-y-3">
         <div className="min-w-0">
           <div className="flex flex-wrap items-center gap-3">
@@ -109,6 +110,7 @@ export function ModuleFrame({
 
         <div className="no-print flex shrink-0 items-center gap-1.5">
           {tools}
+          <ExplainButton target={id} />
           {onRegenerate && (
             <Button variant="quiet" size="sm" onClick={() => setComposing((c) => !c)} disabled={busy}>
               {busy ? <Spinner /> : <IconRefresh size={13} />}

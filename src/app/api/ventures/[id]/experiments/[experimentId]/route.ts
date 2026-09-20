@@ -1,7 +1,7 @@
 import { z } from 'zod'
 import { db } from '@/lib/db'
 import { requireVenture } from '@/lib/auth'
-import { handle, ok, parseData } from '@/lib/api'
+import { handle, ok, fail, parseData } from '@/lib/api'
 import { readJson } from '@/lib/limits'
 
 const Patch = z.object({
@@ -34,29 +34,16 @@ export async function PATCH(req: Request, ctx: { params: Promise<{ id: string; e
       throw e
     }
 
-    const updated = await db.experiment.update({
-      where: { id: experimentId },
-      data: {
-        ...body,
-        script: body.script ? JSON.stringify(body.script) : undefined,
-        evidenceUrl: body.evidenceUrl === '' ? null : body.evidenceUrl,
-      },
+    const assumptionId = body.assumptionId !== undefined ? body.assumptionId : existing.assumptionId
+    if (assumptionId && !await db.assumption.findFirst({ where: { id: assumptionId, ventureId: id } })) return fail('The linked assumption does not belong to this venture.', 422)
+    const updated = await db.$transaction(async tx => {
+      const row = await tx.experiment.update({ where: { id: experimentId }, data: { ...body, script: body.script ? JSON.stringify(body.script) : undefined, evidenceUrl: body.evidenceUrl === '' ? null : body.evidenceUrl } })
+      if (body.status && assumptionId) {
+        const status: Record<string, string> = { passed: 'supported', failed: 'refuted', running: 'testing', inconclusive: 'testing', planned: 'untested' }
+        await tx.assumption.update({ where: { id: assumptionId }, data: { status: status[body.status] } })
+      }
+      return row
     })
-
-    // A concluded experiment moves its assumption's status with it.
-    if (body.status && existing.assumptionId) {
-      const map: Record<string, string> = {
-        passed: 'supported',
-        failed: 'refuted',
-        running: 'testing',
-        inconclusive: 'testing',
-        planned: 'untested',
-      }
-      const next = map[body.status]
-      if (next) {
-        await db.assumption.update({ where: { id: existing.assumptionId }, data: { status: next } }).catch(() => {})
-      }
-    }
 
     return ok({ experiment: { ...updated, script: parseData<string[]>(updated.script ?? '[]', []) } })
   } catch (err) {

@@ -26,7 +26,7 @@ const evidence = enm(
   'Use "sourced" ONLY when a SUPPLIED SOURCE with a real URL supports this. Use "user_provided" when the founder pasted it. Otherwise "hypothesis".',
 )
 const likelihood = enm(['low', 'moderate', 'high'])
-const score = (d: string) => int(d + ' Integer 1-5.')
+const score = (d: string) => ({ ...int(d + ' Integer 1-5.'), minimum: 1, maximum: 5 })
 
 /* ---------------------------------------------------------------- */
 
@@ -203,7 +203,7 @@ export const verdictSchema = obj({
   strongestSignal: str(),
   fatalFlawRisk: str(),
   whatWouldChangeThis: str('The specific evidence that would move the verdict.'),
-  healthScore: int('0-100. How much of this is actually established rather than hoped.'),
+  healthScore: { ...int('0-100. How much of this is actually established rather than hoped.'), minimum: 0, maximum: 100 },
 })
 
 export const assumptionsSchema = arr(
