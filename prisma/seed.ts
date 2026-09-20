@@ -101,7 +101,7 @@ async function main() {
   console.log(`Seeded ${user.email} with venture "${venture.title}" (${venture.id})`)
 }
 
-main()
+export const seedPromise = main()
   .catch((e) => {
     console.error(e)
     process.exit(1)

@@ -1,0 +1,209 @@
+// Venture Autopsy — production schema.
+// The local schema remains SQLite so existing desktop data is preserved.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url      = env("DATABASE_URL")
+  directUrl = env("DATABASE_URL_UNPOOLED")
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  name      String
+  // Founder profile, captured in onboarding. Feeds the analysis prompt.
+  role      String? // e.g. "Technical founder"
+  strengths String? // JSON string array
+  capital   String?
+  timeframe String?
+  riskAppetite String?
+  onboarded Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  sessions Session[]
+  ventures Venture[]
+  usage    Usage[]
+}
+
+model Session {
+  id        String   @id @default(cuid())
+  token     String   @unique
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+}
+
+model Venture {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  title     String
+  // The raw idea as the founder wrote it. Never overwritten by analysis.
+  rawIdea   String
+  stage     String   @default("captured") // captured | analysing | analysed | validating | ready
+  status    String   @default("active")   // active | archived
+  verdict   String? // Promising | Needs Validation | High Risk
+  confidence String?
+  healthScore Int     @default(50)
+  accent    String   @default("lime")     // lime | ember — derived from verdict
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  ideaInputs   IdeaInput[]
+  analyses     Analysis[]
+  sources      ResearchSource[]
+  assumptions  Assumption[]
+  experiments  Experiment[]
+  messages     ChatMessage[]
+
+  @@index([userId, status])
+}
+
+/// Successive refinements of the idea. Keeps a history rather than mutating.
+model IdeaInput {
+  id        String   @id @default(cuid())
+  ventureId String
+  venture   Venture  @relation(fields: [ventureId], references: [id], onDelete: Cascade)
+  kind      String   @default("idea") // idea | refinement | constraint
+  content   String
+  createdAt DateTime @default(now())
+
+  @@index([ventureId])
+}
+
+/// One generated section of the atlas. Versioned so regeneration is non-destructive.
+model Analysis {
+  id        String   @id @default(cuid())
+  ventureId String
+  venture   Venture  @relation(fields: [ventureId], references: [id], onDelete: Cascade)
+  /// genome | market | failures | pivots | model | scenarios | launch | verdict
+  section   String
+  /// Structured JSON returned by Gemini, validated before it lands here.
+  data      String
+  /// hypothesis | user_provided | sourced — the integrity label for the whole section.
+  evidence  String   @default("hypothesis")
+  version   Int      @default(1)
+  isCurrent Boolean  @default(true)
+  model     String?
+  createdAt DateTime @default(now())
+
+  @@index([ventureId, section, isCurrent])
+}
+
+model ResearchSource {
+  id        String   @id @default(cuid())
+  ventureId String
+  venture   Venture  @relation(fields: [ventureId], references: [id], onDelete: Cascade)
+  /// grounded | url | competitor | review | interview | survey | note
+  kind      String
+  title     String
+  url       String?
+  /// Verbatim snippet or pasted content. Analysis may only cite what is here.
+  snippet   String
+  /// sourced (retrieved with a real URL) | user_provided (pasted by the founder)
+  evidence  String   @default("user_provided")
+  retrievedAt DateTime @default(now())
+  createdAt DateTime @default(now())
+
+  @@index([ventureId])
+}
+
+model Assumption {
+  id        String   @id @default(cuid())
+  ventureId String
+  venture   Venture  @relation(fields: [ventureId], references: [id], onDelete: Cascade)
+
+  claim       String
+  category    String
+  impact      Int     @default(3) // 1-5
+  uncertainty Int     @default(3) // 1-5
+  breaksIfFalse String
+  proofNeeded   String
+  cheapestTest  String
+  testCost      String?
+  testDuration  String?
+  /// untested | testing | supported | refuted
+  status      String  @default("untested")
+  notes       String?
+  /// Position on the minefield terrain, so the layout is stable across visits.
+  x           Float   @default(0)
+  y           Float   @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  experiments Experiment[]
+
+  @@index([ventureId])
+}
+
+model Experiment {
+  id           String  @id @default(cuid())
+  ventureId    String
+  venture      Venture @relation(fields: [ventureId], references: [id], onDelete: Cascade)
+  assumptionId String?
+  assumption   Assumption? @relation(fields: [assumptionId], references: [id], onDelete: SetNull)
+
+  name        String
+  /// interview | fake_door | landing_page | concierge | survey | prototype
+  kind        String  @default("interview")
+  hypothesis  String
+  method      String
+  /// JSON array of interview questions or test steps.
+  script      String?
+  successThreshold String
+  failThreshold    String
+  sampleSize  String?
+  duration    String?
+  cost        String?
+  /// planned | running | passed | failed | inconclusive
+  status      String  @default("planned")
+  /// Evidence gathered while running it.
+  result      String?
+  evidenceUrl String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([ventureId])
+  @@index([assumptionId])
+}
+
+model ChatMessage {
+  id        String   @id @default(cuid())
+  ventureId String
+  venture   Venture  @relation(fields: [ventureId], references: [id], onDelete: Cascade)
+  role      String // founder | milo
+  content   String
+  /// Which module the founder was looking at when they asked.
+  context   String?
+  action    String?
+  createdAt DateTime @default(now())
+
+  @@index([ventureId])
+}
+
+/// Per-user, per-day model usage. Backs the daily quota in lib/limits.ts.
+/// A row rather than a variable, so the allowance survives restarts and is
+/// shared across instances.
+model Usage {
+  id         String   @id @default(cuid())
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  /// UTC date, YYYY-MM-DD.
+  day        String
+  modelCalls Int      @default(0)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@unique([userId, day])
+  @@index([day])
+}
